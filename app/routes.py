@@ -19,6 +19,16 @@ def calculate_risk(activity_type):
     }
 
     return risk_mapping.get(activity_type, "Low")
+def generate_alert(risk_level):
+
+    if risk_level == "High":
+        return "Suspicious Activity Detected"
+
+    elif risk_level == "Medium":
+        return "Review Recommended"
+
+    else:
+        return "Normal Activity"
 # Database Dependency
 def get_db():
     db = SessionLocal()
@@ -57,3 +67,22 @@ def get_activities(db: Session = Depends(get_db)):
     activities = db.query(EmployeeActivity).all()
 
     return activities
+@router.get("/alerts")
+def get_alerts(db: Session = Depends(get_db)):
+
+    activities = db.query(EmployeeActivity).all()
+
+    alerts = []
+
+    for activity in activities:
+
+        alert_message = generate_alert(activity.risk_level)
+
+        alerts.append({
+            "employee_name": activity.employee_name,
+            "activity_type": activity.activity_type,
+            "risk_level": activity.risk_level,
+            "alert": alert_message
+        })
+
+    return alerts
