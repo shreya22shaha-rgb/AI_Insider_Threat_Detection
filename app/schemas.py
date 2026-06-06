@@ -4,7 +4,6 @@ from datetime import datetime
 class EmployeeActivityCreate(BaseModel):
     employee_name: str
     activity_type: str
-    risk_level: str
 
 class EmployeeActivityResponse(BaseModel):
     id: int

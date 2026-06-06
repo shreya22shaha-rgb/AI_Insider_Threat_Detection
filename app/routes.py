@@ -7,6 +7,18 @@ from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
 
 router = APIRouter()
 
+def calculate_risk(activity_type):
+
+    risk_mapping = {
+        "USB File Transfer": "High",
+        "Admin Privilege Change": "High",
+        "Multiple Failed Login": "Medium",
+        "File Download": "Medium",
+        "Email Access": "Low",
+        "System Login": "Low"
+    }
+
+    return risk_mapping.get(activity_type, "Low")
 # Database Dependency
 def get_db():
     db = SessionLocal()
@@ -24,10 +36,12 @@ def home():
 @router.post("/add-activity", response_model=EmployeeActivityResponse)
 def add_activity(activity: EmployeeActivityCreate, db: Session = Depends(get_db)):
 
+    risk_level = calculate_risk(activity.activity_type)
+
     new_activity = EmployeeActivity(
-        employee_name=activity.employee_name,
-        activity_type=activity.activity_type,
-        risk_level=activity.risk_level
+     employee_name=activity.employee_name,
+     activity_type=activity.activity_type,
+     risk_level=risk_level
     )
 
     db.add(new_activity)
