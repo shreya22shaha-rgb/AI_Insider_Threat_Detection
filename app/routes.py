@@ -86,3 +86,29 @@ def get_alerts(db: Session = Depends(get_db)):
         })
 
     return alerts
+
+@router.get("/dashboard")
+def dashboard_stats(db: Session = Depends(get_db)):
+
+    activities = db.query(EmployeeActivity).all()
+
+    total_activities = len(activities)
+
+    high_risk = len(
+        [a for a in activities if a.risk_level == "High"]
+    )
+
+    medium_risk = len(
+        [a for a in activities if a.risk_level == "Medium"]
+    )
+
+    low_risk = len(
+        [a for a in activities if a.risk_level == "Low"]
+    )
+
+    return {
+        "total_activities": total_activities,
+        "high_risk": high_risk,
+        "medium_risk": medium_risk,
+        "low_risk": low_risk
+    }
