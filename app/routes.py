@@ -112,3 +112,14 @@ def dashboard_stats(db: Session = Depends(get_db)):
         "medium_risk": medium_risk,
         "low_risk": low_risk
     }
+
+@router.get("/high-risk-activities")
+def get_high_risk_activities(db: Session = Depends(get_db)):
+
+    high_risk_activities = (
+        db.query(EmployeeActivity)
+        .filter(EmployeeActivity.risk_level == "High")
+        .all()
+    )
+
+    return high_risk_activities
