@@ -177,3 +177,16 @@ def top_risky_employees(db: Session = Depends(get_db)):
         })
 
     return result
+
+@router.get("/recent-alerts")
+
+def recent_alerts(db: Session = Depends(get_db)):
+
+    alerts = (
+        db.query(EmployeeActivity)
+        .filter(EmployeeActivity.risk_level == "High")
+        .order_by(EmployeeActivity.timestamp.desc())
+        .all()
+    )
+
+    return alerts
