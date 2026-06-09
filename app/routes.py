@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from .database import SessionLocal
 from .models import EmployeeActivity
@@ -19,6 +20,7 @@ def calculate_risk(activity_type):
     }
 
     return risk_mapping.get(activity_type, "Low")
+
 def generate_alert(risk_level):
 
     if risk_level == "High":
@@ -39,11 +41,13 @@ def get_db():
 
 # Home Route
 @router.get("/")
+
 def home():
     return {"message": "AI Insider Threat Detection API Running"}
 
 # Add Employee Activity
 @router.post("/add-activity", response_model=EmployeeActivityResponse)
+
 def add_activity(activity: EmployeeActivityCreate, db: Session = Depends(get_db)):
 
     risk_level = calculate_risk(activity.activity_type)
@@ -62,12 +66,16 @@ def add_activity(activity: EmployeeActivityCreate, db: Session = Depends(get_db)
 
 # Get All Activities
 @router.get("/activities")
+
 def get_activities(db: Session = Depends(get_db)):
 
     activities = db.query(EmployeeActivity).all()
 
     return activities
+
+
 @router.get("/alerts")
+
 def get_alerts(db: Session = Depends(get_db)):
 
     activities = db.query(EmployeeActivity).all()
@@ -88,6 +96,7 @@ def get_alerts(db: Session = Depends(get_db)):
     return alerts
 
 @router.get("/dashboard")
+
 def dashboard_stats(db: Session = Depends(get_db)):
 
     activities = db.query(EmployeeActivity).all()
@@ -114,6 +123,7 @@ def dashboard_stats(db: Session = Depends(get_db)):
     }
 
 @router.get("/high-risk-activities")
+
 def get_high_risk_activities(db: Session = Depends(get_db)):
 
     high_risk_activities = (
@@ -125,6 +135,7 @@ def get_high_risk_activities(db: Session = Depends(get_db)):
     return high_risk_activities 
 
 @router.get("/employee/{employee_name}")
+
 def get_employee_activities(
     employee_name: str,
     db: Session = Depends(get_db)
@@ -139,3 +150,30 @@ def get_employee_activities(
     )
 
     return activities
+
+@router.get("/top-risky-employees")
+
+def top_risky_employees(db: Session = Depends(get_db)):
+
+    risky_employees = (
+        db.query(
+            EmployeeActivity.employee_name,
+            func.count(EmployeeActivity.id).label("high_risk_count")
+        )
+        .filter(EmployeeActivity.risk_level == "High")
+        .group_by(EmployeeActivity.employee_name)
+        .order_by(
+            func.count(EmployeeActivity.id).desc()
+        )
+        .all()
+    )
+
+    result = []
+
+    for employee in risky_employees:
+        result.append({
+            "employee_name": employee.employee_name,
+            "high_risk_count": employee.high_risk_count
+        })
+
+    return result
