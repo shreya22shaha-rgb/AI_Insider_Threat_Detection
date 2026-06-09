@@ -122,4 +122,20 @@ def get_high_risk_activities(db: Session = Depends(get_db)):
         .all()
     )
 
-    return high_risk_activities
+    return high_risk_activities 
+
+@router.get("/employee/{employee_name}")
+def get_employee_activities(
+    employee_name: str,
+    db: Session = Depends(get_db)
+):
+
+    activities = (
+        db.query(EmployeeActivity)
+        .filter(
+            EmployeeActivity.employee_name == employee_name
+        )
+        .all()
+    )
+
+    return activities
