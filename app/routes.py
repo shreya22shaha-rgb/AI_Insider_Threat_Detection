@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from datetime import date
 
 from .database import SessionLocal
 from .models import EmployeeActivity
@@ -227,5 +228,24 @@ def employee_risk_score(db: Session = Depends(get_db)):
         key=lambda x: x["risk_score"],
         reverse=True
     )
+
+    return result
+
+@router.get("/activities-by-date")
+
+def activities_by_date(
+    selected_date: date,
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    result = []
+
+    for activity in activities:
+
+        if activity.timestamp.date() == selected_date:
+
+            result.append(activity)
 
     return result
