@@ -179,7 +179,6 @@ def top_risky_employees(db: Session = Depends(get_db)):
     return result
 
 @router.get("/recent-alerts")
-
 def recent_alerts(db: Session = Depends(get_db)):
 
     alerts = (
@@ -190,3 +189,43 @@ def recent_alerts(db: Session = Depends(get_db)):
     )
 
     return alerts
+
+
+@router.get("/employee-risk-score")
+
+def employee_risk_score(db: Session = Depends(get_db)):
+
+    activities = db.query(EmployeeActivity).all()
+
+    employee_scores = {}
+
+    for activity in activities:
+
+        if activity.risk_level == "High":
+            score = 10
+
+        elif activity.risk_level == "Medium":
+            score = 5
+
+        else:
+            score = 1
+
+        if activity.employee_name not in employee_scores:
+            employee_scores[activity.employee_name] = 0
+
+        employee_scores[activity.employee_name] += score
+
+    result = []
+
+    for employee, score in employee_scores.items():
+        result.append({
+            "employee_name": employee,
+            "risk_score": score
+        })
+
+    result.sort(
+        key=lambda x: x["risk_score"],
+        reverse=True
+    )
+
+    return result
