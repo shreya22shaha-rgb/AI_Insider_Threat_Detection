@@ -249,3 +249,20 @@ def activities_by_date(
             result.append(activity)
 
     return result
+
+@router.get("/employee-timeline/{employee_name}")
+def employee_timeline(
+    employee_name: str,
+    db: Session = Depends(get_db)
+):
+
+    activities = (
+        db.query(EmployeeActivity)
+        .filter(
+            EmployeeActivity.employee_name == employee_name
+        )
+        .order_by(EmployeeActivity.timestamp.asc())
+        .all()
+    )
+
+    return activities
