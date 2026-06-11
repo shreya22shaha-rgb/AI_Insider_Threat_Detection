@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date
+from .user_models import User
+from .user_schemas import UserCreate, UserResponse
 
 from .database import SessionLocal
 from .models import EmployeeActivity
@@ -266,3 +268,22 @@ def employee_timeline(
     )
 
     return activities
+
+@router.post("/register", response_model=UserResponse)
+def register_user(
+    user: UserCreate,
+    db: Session = Depends(get_db)
+):
+
+    new_user = User(
+        username=user.username,
+        email=user.email,
+        password=user.password,
+        role=user.role
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
