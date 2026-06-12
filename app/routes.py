@@ -4,7 +4,11 @@ from sqlalchemy import func
 from datetime import date
 from .user_models import User
 from .user_schemas import UserCreate, UserResponse, UserLogin
-from .auth import hash_password, verify_password
+from .auth import (
+    hash_password,
+    verify_password,
+    create_access_token
+)
 
 from .database import SessionLocal
 from .models import EmployeeActivity
@@ -318,8 +322,14 @@ def login_user(
             "message": "Invalid password"
         }
 
+    access_token = create_access_token(
+        {
+            "sub": db_user.username,
+            "role": db_user.role
+        }
+    )
+
     return {
-        "message": "Login successful",
-        "username": db_user.username,
-        "role": db_user.role
+        "access_token": access_token,
+        "token_type": "bearer"
     }
