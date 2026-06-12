@@ -4,6 +4,7 @@ from sqlalchemy import func
 from datetime import date
 from .user_models import User
 from .user_schemas import UserCreate, UserResponse
+from .auth import hash_password
 
 from .database import SessionLocal
 from .models import EmployeeActivity
@@ -275,10 +276,14 @@ def register_user(
     db: Session = Depends(get_db)
 ):
 
+    hashed_password = hash_password(
+        user.password
+    )
+
     new_user = User(
         username=user.username,
         email=user.email,
-        password=user.password,
+        password=hashed_password,
         role=user.role
     )
 
