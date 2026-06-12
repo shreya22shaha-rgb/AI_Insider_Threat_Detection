@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date
@@ -281,8 +281,15 @@ def employee_timeline(
 @router.post("/register", response_model=UserResponse)
 def register_user(
     user: UserCreate,
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    if current_user["role"] != "Admin":
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only Admin can create users"
+        )
 
     hashed_password = hash_password(
         user.password
@@ -340,7 +347,7 @@ def login_user(
 
 @router.get("/test-token")
 def test_token(
-    current_user: str = Depends(get_current_user)
+    current_user = Depends(get_current_user)
 ):
     return {
         "logged_in_user": current_user

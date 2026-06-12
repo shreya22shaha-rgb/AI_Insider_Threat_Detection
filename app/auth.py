@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
+
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
@@ -58,11 +59,15 @@ def verify_token(token: str):
         )
 
         username = payload.get("sub")
+        role = payload.get("role")
 
         if username is None:
             return None
 
-        return username
+        return {
+            "username": username,
+            "role": role
+        }
 
     except JWTError:
         return None
@@ -71,13 +76,13 @@ def get_current_user(
     token: str = Depends(oauth2_scheme)
 ):
 
-    username = verify_token(token)
+    user_data = verify_token(token)
 
-    if username is None:
+    if user_data is None:
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
 
-    return username
+    return user_data
