@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date
 from .user_models import User
-from .user_schemas import UserCreate, UserResponse
-from .auth import hash_password
+from .user_schemas import UserCreate, UserResponse, UserLogin
+from .auth import hash_password, verify_password
 
 from .database import SessionLocal
 from .models import EmployeeActivity
@@ -292,3 +292,34 @@ def register_user(
     db.refresh(new_user)
 
     return new_user
+
+@router.post("/login")
+def login_user(
+    user: UserLogin,
+    db: Session = Depends(get_db)
+):
+
+    db_user = (
+        db.query(User)
+        .filter(User.username == user.username)
+        .first()
+    )
+
+    if not db_user:
+        return {
+            "message": "User not found"
+        }
+
+    if not verify_password(
+        user.password,
+        db_user.password
+    ):
+        return {
+            "message": "Invalid password"
+        }
+
+    return {
+        "message": "Login successful",
+        "username": db_user.username,
+        "role": db_user.role
+    }
