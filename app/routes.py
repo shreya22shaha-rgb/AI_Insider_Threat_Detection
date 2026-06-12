@@ -7,7 +7,8 @@ from .user_schemas import UserCreate, UserResponse, UserLogin
 from .auth import (
     hash_password,
     verify_password,
-    create_access_token
+    create_access_token,
+    get_current_user
 )
 
 from .database import SessionLocal
@@ -75,7 +76,10 @@ def add_activity(activity: EmployeeActivityCreate, db: Session = Depends(get_db)
 # Get All Activities
 @router.get("/activities")
 
-def get_activities(db: Session = Depends(get_db)):
+def get_activities(
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+   ):
 
     activities = db.query(EmployeeActivity).all()
 
@@ -332,4 +336,12 @@ def login_user(
     return {
         "access_token": access_token,
         "token_type": "bearer"
+    }
+
+@router.get("/test-token")
+def test_token(
+    current_user: str = Depends(get_current_user)
+):
+    return {
+        "logged_in_user": current_user
     }
