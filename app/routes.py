@@ -282,16 +282,9 @@ def employee_timeline(
 @router.post("/register", response_model=UserResponse)
 def register_user(
     user: UserCreate,
-    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if current_user["role"] != "Admin":
-
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only Admin can create users"
-        )
-
+    
     hashed_password = hash_password(
         user.password
     )
@@ -306,6 +299,14 @@ def register_user(
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    audit_log = AuditLog(
+      username="admin",
+      action="USER_REGISTERED"
+   )
+
+    db.add(audit_log)
+    db.commit()
 
     return new_user
 
@@ -322,6 +323,15 @@ def login_user(
     )
 
     if not db_user:
+
+        audit_log = AuditLog(
+            username=user.username,
+            action="LOGIN_FAILED"
+        )
+
+        db.add(audit_log)
+        db.commit()
+
         return {
             "message": "User not found"
         }
@@ -330,6 +340,15 @@ def login_user(
         user.password,
         db_user.password
     ):
+
+        audit_log = AuditLog(
+            username=db_user.username,
+            action="LOGIN_FAILED"
+        )
+
+        db.add(audit_log)
+        db.commit()
+
         return {
             "message": "Invalid password"
         }
@@ -342,8 +361,8 @@ def login_user(
     )
 
     audit_log = AuditLog(
-      username=db_user.username,
-      action="LOGIN_SUCCESS"
+        username=db_user.username,
+        action="LOGIN_SUCCESS"
     )
 
     db.add(audit_log)
@@ -361,3 +380,16 @@ def test_token(
     return {
         "logged_in_user": current_user
     }
+
+@router.get("/audit-logs")
+def get_audit_logs(
+    db: Session = Depends(get_db)
+):
+
+    logs = (
+        db.query(AuditLog)
+        .order_by(AuditLog.id.desc())
+        .all()
+    )
+
+    return logs
