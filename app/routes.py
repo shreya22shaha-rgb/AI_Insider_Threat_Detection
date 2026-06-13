@@ -13,6 +13,7 @@ from .auth import (
 
 from .database import SessionLocal
 from .models import EmployeeActivity
+from .audit_models import AuditLog
 from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
 
 router = APIRouter()
@@ -339,6 +340,14 @@ def login_user(
             "role": db_user.role
         }
     )
+
+    audit_log = AuditLog(
+      username=db_user.username,
+      action="LOGIN_SUCCESS"
+    )
+
+    db.add(audit_log)
+    db.commit()
 
     return {
         "access_token": access_token,
