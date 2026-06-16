@@ -8,7 +8,8 @@ from .auth import (
     hash_password,
     verify_password,
     create_access_token,
-    get_current_user
+    get_current_user,
+    require_role
 )
 
 from .database import SessionLocal
@@ -78,9 +79,14 @@ def add_activity(activity: EmployeeActivityCreate, db: Session = Depends(get_db)
 @router.get("/activities")
 
 def get_activities(
-    current_user: str = Depends(get_current_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
    ):
+    
+    require_role(
+    current_user,
+    ["Admin", "Analyst"]
+    )
 
     activities = db.query(EmployeeActivity).all()
 
@@ -282,8 +288,14 @@ def employee_timeline(
 @router.post("/register", response_model=UserResponse)
 def register_user(
     user: UserCreate,
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    
+    require_role(
+    current_user,
+    ["Admin"]
+    )
     
     hashed_password = hash_password(
         user.password
@@ -383,8 +395,14 @@ def test_token(
 
 @router.get("/audit-logs")
 def get_audit_logs(
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    
+    require_role(
+    current_user,
+    ["Admin"]
+    )
 
     logs = (
         db.query(AuditLog)
