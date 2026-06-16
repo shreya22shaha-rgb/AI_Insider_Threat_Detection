@@ -4,6 +4,7 @@ from sqlalchemy import func
 from datetime import date
 from .user_models import User
 from .user_schemas import UserCreate, UserResponse, UserLogin
+from fastapi.security import OAuth2PasswordRequestForm
 from .auth import (
     hash_password,
     verify_password,
@@ -313,7 +314,7 @@ def register_user(
     db.refresh(new_user)
 
     audit_log = AuditLog(
-      username="admin",
+      username=current_user["username"],
       action="USER_REGISTERED"
    )
 
@@ -324,20 +325,20 @@ def register_user(
 
 @router.post("/login")
 def login_user(
-    user: UserLogin,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
 
     db_user = (
         db.query(User)
-        .filter(User.username == user.username)
+        .filter(User.username == form_data.username)
         .first()
     )
 
     if not db_user:
 
         audit_log = AuditLog(
-            username=user.username,
+            username=form_data.username,
             action="LOGIN_FAILED"
         )
 
@@ -349,7 +350,7 @@ def login_user(
         }
 
     if not verify_password(
-        user.password,
+        form_data.password,
         db_user.password
     ):
 
