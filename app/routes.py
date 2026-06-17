@@ -408,6 +408,39 @@ def security_summary(
         )
     }
 
+@router.get("/failed-login-alerts")
+def failed_login_alerts(
+    db: Session = Depends(get_db)
+):
+
+    failed_logins = (
+        db.query(
+            AuditLog.username,
+            func.count(AuditLog.id).label("failed_attempts")
+        )
+        .filter(
+            AuditLog.action == "LOGIN_FAILED"
+        )
+        .group_by(
+            AuditLog.username
+        )
+        .all()
+    )
+
+    alerts = []
+
+    for user in failed_logins:
+
+        if user.failed_attempts >= 3:
+
+            alerts.append({
+                "username": user.username,
+                "failed_attempts": user.failed_attempts,
+                "alert": "Suspicious Login Activity"
+            })
+
+    return alerts
+
 @router.get("/activities-by-date")
 
 def activities_by_date(
