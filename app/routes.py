@@ -355,6 +355,59 @@ def threat_alerts(
 
     return result
 
+@router.get("/security-summary")
+def security_summary(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    risk_weights = {
+        "USB File Transfer": 15,
+        "Admin Privilege Change": 20,
+        "Multiple Failed Login": 10,
+        "File Download": 5,
+        "Email Access": 2,
+        "System Login": 1
+    }
+
+    employee_scores = {}
+
+    for activity in activities:
+
+        score = risk_weights.get(
+            activity.activity_type,
+            1
+        )
+
+        if activity.employee_name not in employee_scores:
+            employee_scores[activity.employee_name] = 0
+
+        employee_scores[activity.employee_name] += score
+
+    high_risk_users = 0
+    critical_users = 0
+
+    for score in employee_scores.values():
+
+        if score > 50:
+            critical_users += 1
+
+        elif score >= 31:
+            high_risk_users += 1
+
+    return {
+        "total_users": len(employee_scores),
+        "high_risk_users": high_risk_users,
+        "critical_users": critical_users,
+        "alerts_generated": len(
+            [
+                a for a in activities
+                if a.risk_level == "High"
+            ]
+        )
+    }
+
 @router.get("/activities-by-date")
 
 def activities_by_date(
