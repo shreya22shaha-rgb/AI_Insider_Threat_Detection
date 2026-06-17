@@ -250,6 +250,52 @@ def employee_risk_score(db: Session = Depends(get_db)):
 
     return result
 
+@router.get("/dynamic-risk-score")
+def dynamic_risk_score(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    risk_weights = {
+        "USB File Transfer": 15,
+        "Admin Privilege Change": 20,
+        "Multiple Failed Login": 10,
+        "File Download": 5,
+        "Email Access": 2,
+        "System Login": 1
+    }
+
+    employee_scores = {}
+
+    for activity in activities:
+
+        score = risk_weights.get(
+            activity.activity_type,
+            1
+        )
+
+        if activity.employee_name not in employee_scores:
+            employee_scores[activity.employee_name] = 0
+
+        employee_scores[activity.employee_name] += score
+
+    result = []
+
+    for employee, score in employee_scores.items():
+
+        result.append({
+            "employee_name": employee,
+            "risk_score": score
+        })
+
+    result.sort(
+        key=lambda x: x["risk_score"],
+        reverse=True
+    )
+
+    return result
+
 @router.get("/activities-by-date")
 
 def activities_by_date(
