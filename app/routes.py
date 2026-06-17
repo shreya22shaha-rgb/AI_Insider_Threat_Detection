@@ -296,6 +296,65 @@ def dynamic_risk_score(
 
     return result
 
+@router.get("/threat-alerts")
+def threat_alerts(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    risk_weights = {
+        "USB File Transfer": 15,
+        "Admin Privilege Change": 20,
+        "Multiple Failed Login": 10,
+        "File Download": 5,
+        "Email Access": 2,
+        "System Login": 1
+    }
+
+    employee_scores = {}
+
+    for activity in activities:
+
+        score = risk_weights.get(
+            activity.activity_type,
+            1
+        )
+
+        if activity.employee_name not in employee_scores:
+            employee_scores[activity.employee_name] = 0
+
+        employee_scores[activity.employee_name] += score
+
+    result = []
+
+    for employee, score in employee_scores.items():
+
+        if score > 50:
+            threat_level = "Critical"
+
+        elif score >= 31:
+            threat_level = "High"
+
+        elif score >= 10:
+            threat_level = "Medium"
+
+        else:
+            threat_level = "Low"
+
+        result.append({
+            "employee_name": employee,
+            "risk_score": score,
+            "threat_level": threat_level
+        })
+
+    result.sort(
+        key=lambda x: x["risk_score"],
+        reverse=True
+    )
+
+    return result
+
 @router.get("/activities-by-date")
 
 def activities_by_date(
