@@ -1,0 +1,198 @@
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 132px;
+  padding: 20px 22px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #1e293b 0%, #172033 100%);
+  border: 1px solid rgba(71, 85, 105, 0.35);
+  box-shadow:
+    0 10px 30px rgba(2, 6, 23, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.25s ease;
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 45%);
+  pointer-events: none;
+}
+
+.stat-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 0 0 18px 18px;
+  background: var(--card-accent, #3b82f6);
+  opacity: 0.9;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(96, 165, 250, 0.32);
+  box-shadow:
+    0 16px 36px rgba(2, 6, 23, 0.36),
+    0 0 0 1px rgba(59, 130, 246, 0.08);
+}
+
+.stat-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 12px;
+}
+
+.stat-card__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--card-accent, #3b82f6);
+  background: linear-gradient(
+    145deg,
+    var(--card-accent-soft, rgba(59, 130, 246, 0.18)),
+    rgba(15, 23, 42, 0.35)
+  );
+  border: 1px solid var(--card-accent-border, rgba(59, 130, 246, 0.22));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 20px rgba(15, 23, 42, 0.18);
+}
+
+.stat-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-card__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.01em;
+}
+
+.stat-card__value {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+}
+
+.stat-card__subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.stat-card__trend {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.stat-card__trend--up {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.stat-card__trend--down {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.stat-card__trend--neutral {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.stat-card--blue {
+  --card-accent: #3b82f6;
+  --card-accent-soft: rgba(59, 130, 246, 0.18);
+  --card-accent-border: rgba(59, 130, 246, 0.24);
+}
+
+.stat-card--green {
+  --card-accent: #10b981;
+  --card-accent-soft: rgba(16, 185, 129, 0.18);
+  --card-accent-border: rgba(16, 185, 129, 0.24);
+}
+
+.stat-card--yellow {
+  --card-accent: #f59e0b;
+  --card-accent-soft: rgba(245, 158, 11, 0.18);
+  --card-accent-border: rgba(245, 158, 11, 0.24);
+}
+
+.stat-card--red {
+  --card-accent: #ef4444;
+  --card-accent-soft: rgba(239, 68, 68, 0.18);
+  --card-accent-border: rgba(239, 68, 68, 0.24);
+}
+
+.stat-card--purple {
+  --card-accent: #8b5cf6;
+  --card-accent-soft: rgba(139, 92, 246, 0.18);
+  --card-accent-border: rgba(139, 92, 246, 0.24);
+}
+
+.stat-card--cyan {
+  --card-accent: #06b6d4;
+  --card-accent-soft: rgba(6, 182, 212, 0.18);
+  --card-accent-border: rgba(6, 182, 212, 0.24);
+}
+
+@media (max-width: 768px) {
+  .stat-card {
+    min-height: 120px;
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .stat-icon {
+    width: 46px;
+    height: 46px;
+    font-size: 21px;
+    border-radius: 12px;
+  }
+
+  .stat-card__value {
+    font-size: 28px;
+  }
+
+  .stat-card__title {
+    font-size: 13px;
+  }
+}
