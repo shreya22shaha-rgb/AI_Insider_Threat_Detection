@@ -250,6 +250,250 @@ def employee_risk_score(db: Session = Depends(get_db)):
 
     return result
 
+@router.get("/dynamic-risk-score")
+def dynamic_risk_score(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    risk_weights = {
+        "USB File Transfer": 15,
+        "Admin Privilege Change": 20,
+        "Multiple Failed Login": 10,
+        "File Download": 5,
+        "Email Access": 2,
+        "System Login": 1
+    }
+
+    employee_scores = {}
+
+    for activity in activities:
+
+        score = risk_weights.get(
+            activity.activity_type,
+            1
+        )
+
+        if activity.employee_name not in employee_scores:
+            employee_scores[activity.employee_name] = 0
+
+        employee_scores[activity.employee_name] += score
+
+    result = []
+
+    for employee, score in employee_scores.items():
+
+        result.append({
+            "employee_name": employee,
+            "risk_score": score
+        })
+
+    result.sort(
+        key=lambda x: x["risk_score"],
+        reverse=True
+    )
+
+    return result
+
+@router.get("/threat-alerts")
+def threat_alerts(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    risk_weights = {
+        "USB File Transfer": 15,
+        "Admin Privilege Change": 20,
+        "Multiple Failed Login": 10,
+        "File Download": 5,
+        "Email Access": 2,
+        "System Login": 1
+    }
+
+    employee_scores = {}
+
+    for activity in activities:
+
+        score = risk_weights.get(
+            activity.activity_type,
+            1
+        )
+
+        if activity.employee_name not in employee_scores:
+            employee_scores[activity.employee_name] = 0
+
+        employee_scores[activity.employee_name] += score
+
+    result = []
+
+    for employee, score in employee_scores.items():
+
+        if score > 50:
+            threat_level = "Critical"
+
+        elif score >= 31:
+            threat_level = "High"
+
+        elif score >= 10:
+            threat_level = "Medium"
+
+        else:
+            threat_level = "Low"
+
+        result.append({
+            "employee_name": employee,
+            "risk_score": score,
+            "threat_level": threat_level
+        })
+
+    result.sort(
+        key=lambda x: x["risk_score"],
+        reverse=True
+    )
+
+    return result
+
+@router.get("/security-summary")
+def security_summary(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    risk_weights = {
+        "USB File Transfer": 15,
+        "Admin Privilege Change": 20,
+        "Multiple Failed Login": 10,
+        "File Download": 5,
+        "Email Access": 2,
+        "System Login": 1
+    }
+
+    employee_scores = {}
+
+    for activity in activities:
+
+        score = risk_weights.get(
+            activity.activity_type,
+            1
+        )
+
+        if activity.employee_name not in employee_scores:
+            employee_scores[activity.employee_name] = 0
+
+        employee_scores[activity.employee_name] += score
+
+    high_risk_users = 0
+    critical_users = 0
+
+    for score in employee_scores.values():
+
+        if score > 50:
+            critical_users += 1
+
+        elif score >= 31:
+            high_risk_users += 1
+
+    return {
+        "total_users": len(employee_scores),
+        "high_risk_users": high_risk_users,
+        "critical_users": critical_users,
+        "alerts_generated": len(
+            [
+                a for a in activities
+                if a.risk_level == "High"
+            ]
+        )
+    }
+
+@router.get("/failed-login-alerts")
+def failed_login_alerts(
+    db: Session = Depends(get_db)
+):
+
+    failed_logins = (
+        db.query(
+            AuditLog.username,
+            func.count(AuditLog.id).label("failed_attempts")
+        )
+        .filter(
+            AuditLog.action == "LOGIN_FAILED"
+        )
+        .group_by(
+            AuditLog.username
+        )
+        .all()
+    )
+
+    alerts = []
+
+    for user in failed_logins:
+
+        if user.failed_attempts >= 3:
+
+            alerts.append({
+                "username": user.username,
+                "failed_attempts": user.failed_attempts,
+                "alert": "Suspicious Login Activity"
+            })
+
+    return alerts
+
+@router.get("/insider-threat-rules")
+def insider_threat_rules(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    employee_activity_count = {}
+
+    alerts = []
+
+    for activity in activities:
+
+        employee = activity.employee_name
+        activity_type = activity.activity_type
+
+        if employee not in employee_activity_count:
+
+            employee_activity_count[employee] = {
+                "USB File Transfer": 0,
+                "File Download": 0,
+                "Admin Privilege Change": 0
+            }
+
+        if activity_type in employee_activity_count[employee]:
+
+            employee_activity_count[employee][activity_type] += 1
+
+    for employee, counts in employee_activity_count.items():
+
+        if counts["USB File Transfer"] >= 3:
+
+            alerts.append({
+                "employee_name": employee,
+                "rule_triggered": "Excessive USB Activity"
+            })
+
+        if counts["File Download"] >= 5:
+
+            alerts.append({
+                "employee_name": employee,
+                "rule_triggered": "Mass File Download Detected"
+            })
+
+        if counts["Admin Privilege Change"] >= 2:
+
+            alerts.append({
+                "employee_name": employee,
+                "rule_triggered": "Privilege Escalation Abuse"
+            })
+
+    return alerts
+
 @router.get("/activities-by-date")
 
 def activities_by_date(
