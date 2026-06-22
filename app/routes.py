@@ -441,6 +441,59 @@ def failed_login_alerts(
 
     return alerts
 
+@router.get("/insider-threat-rules")
+def insider_threat_rules(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    employee_activity_count = {}
+
+    alerts = []
+
+    for activity in activities:
+
+        employee = activity.employee_name
+        activity_type = activity.activity_type
+
+        if employee not in employee_activity_count:
+
+            employee_activity_count[employee] = {
+                "USB File Transfer": 0,
+                "File Download": 0,
+                "Admin Privilege Change": 0
+            }
+
+        if activity_type in employee_activity_count[employee]:
+
+            employee_activity_count[employee][activity_type] += 1
+
+    for employee, counts in employee_activity_count.items():
+
+        if counts["USB File Transfer"] >= 3:
+
+            alerts.append({
+                "employee_name": employee,
+                "rule_triggered": "Excessive USB Activity"
+            })
+
+        if counts["File Download"] >= 5:
+
+            alerts.append({
+                "employee_name": employee,
+                "rule_triggered": "Mass File Download Detected"
+            })
+
+        if counts["Admin Privilege Change"] >= 2:
+
+            alerts.append({
+                "employee_name": employee,
+                "rule_triggered": "Privilege Escalation Abuse"
+            })
+
+    return alerts
+
 @router.get("/activities-by-date")
 
 def activities_by_date(
