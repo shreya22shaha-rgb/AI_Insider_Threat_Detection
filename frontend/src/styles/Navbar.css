@@ -1,15 +1,16 @@
 .navbar {
-  height: 80px;
+  min-height: 80px;
   background: #1e293b;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 30px;
+  padding: 16px 24px;
   border: 1px solid #334155;
   border-radius: 16px;
   margin-bottom: 24px;
   width: 100%;
   box-sizing: border-box;
+  gap: 16px;
 }
 
 .search-box {
@@ -22,14 +23,15 @@
   width: 350px;
   max-width: 100%;
   color: #94a3b8;
-  border: 1px solid #1e293b;
+  border: 1px solid #334155;
+  box-sizing: border-box;
 }
 
 .search-box input {
   background: transparent;
   border: none;
   outline: none;
-  color: white;
+  color: #ffffff;
   width: 100%;
   font-size: 14px;
 }
@@ -41,23 +43,78 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.nav-icon,
-.profile-icon {
-  color: white;
-  font-size: 22px;
+.nav-icon {
+  color: #ffffff;
+  font-size: 20px;
   cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.nav-icon:hover {
+  color: #38bdf8;
 }
 
 .profile-icon {
-  font-size: 35px;
+  color: #cbd5e1;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.nav-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  padding: 6px 12px;
+  min-height: 44px;
+}
+
+.nav-user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.nav-user-name {
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nav-user-role {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0f172a;
+  color: #f87171;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #172033;
+  border-color: #475569;
 }
 
 @media (max-width: 992px) {
   .navbar {
-    padding: 0 20px;
+    padding: 14px 18px;
   }
 
   .search-box {
@@ -67,11 +124,9 @@
 
 @media (max-width: 768px) {
   .navbar {
-    height: auto;
-    padding: 16px;
     flex-direction: column;
     align-items: stretch;
-    gap: 14px;
+    padding: 16px;
   }
 
   .search-box {
@@ -79,6 +134,28 @@
   }
 
   .navbar-right {
-    justify-content: flex-end;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .nav-user-chip {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .navbar-right {
+    gap: 12px;
+  }
+
+  .nav-user-chip {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 12px;
+  }
+
+  .logout-btn {
+    width: 100%;
+    justify-content: center;
   }
 }

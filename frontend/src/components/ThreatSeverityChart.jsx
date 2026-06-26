@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -9,13 +10,14 @@ import {
   Cell,
   LabelList,
 } from "recharts";
+import api from "../services/api";
 
-const data = [
-  { severity: "Critical", value: 3, color: "#EF4444" },
-  { severity: "High", value: 8, color: "#F97316" },
-  { severity: "Medium", value: 15, color: "#F59E0B" },
-  { severity: "Low", value: 20, color: "#10B981" },
-];
+const severityColors = {
+  Critical: "#EF4444",
+  High: "#F97316",
+  Medium: "#F59E0B",
+  Low: "#10B981",
+};
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
@@ -46,28 +48,69 @@ function CustomTooltip({ active, payload }) {
   );
 }
 
-function CustomXTick({ x, y, payload }) {
-  const entry = data.find((d) => d.severity === payload.value);
-
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <circle cx={0} cy={4} r={4} fill={entry?.color ?? "#94A3B8"} />
-      <text
-        x={0}
-        y={20}
-        textAnchor="middle"
-        fill="#94A3B8"
-        fontSize={12}
-        fontFamily="Inter, sans-serif"
-      >
-        {payload.value}
-      </text>
-    </g>
-  );
-}
-
 function ThreatSeverityChart() {
+  const [data, setData] = useState([
+    { severity: "Critical", value: 0, color: "#EF4444" },
+    { severity: "High", value: 0, color: "#F97316" },
+    { severity: "Medium", value: 0, color: "#F59E0B" },
+    { severity: "Low", value: 0, color: "#10B981" },
+  ]);
+
+  useEffect(() => {
+    api
+      .get("/threat-alerts")
+      .then((response) => {
+        const raw = response.data || [];
+
+        const counts = {
+          Critical: 0,
+          High: 0,
+          Medium: 0,
+          Low: 0,
+        };
+
+        raw.forEach((item) => {
+          const level = String(item.threat_level || "Low").trim();
+
+          if (level === "Critical") counts.Critical += 1;
+          else if (level === "High") counts.High += 1;
+          else if (level === "Medium") counts.Medium += 1;
+          else counts.Low += 1;
+        });
+
+        setData([
+          { severity: "Critical", value: counts.Critical, color: severityColors.Critical },
+          { severity: "High", value: counts.High, color: severityColors.High },
+          { severity: "Medium", value: counts.Medium, color: severityColors.Medium },
+          { severity: "Low", value: counts.Low, color: severityColors.Low },
+        ]);
+      })
+      .catch((error) => {
+        console.error("Threat alerts API error:", error);
+      });
+  }, []);
+
   const total = data.reduce((s, d) => s + d.value, 0);
+
+  const CustomXTick = ({ x, y, payload }) => {
+    const entry = data.find((d) => d.severity === payload.value);
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <circle cx={0} cy={4} r={4} fill={entry?.color ?? "#94A3B8"} />
+        <text
+          x={0}
+          y={20}
+          textAnchor="middle"
+          fill="#94A3B8"
+          fontSize={12}
+          fontFamily="Inter, sans-serif"
+        >
+          {payload.value}
+        </text>
+      </g>
+    );
+  };
 
   return (
     <div

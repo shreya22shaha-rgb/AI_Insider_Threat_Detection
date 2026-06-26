@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { FaShieldAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 import "../styles/Login.css";
 
@@ -18,6 +18,12 @@ function LoginPage() {
 
   const validUsername = "admin";
   const validPassword = "admin123";
+
+  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -43,8 +49,17 @@ function LoginPage() {
         formData.username === validUsername &&
         formData.password === validPassword
       ) {
+        const loggedInUser = {
+          username: formData.username,
+          name: "Admin User",
+          role: "Security Admin",
+          email: "admin@company.com",
+        };
+
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("username", formData.username);
+        localStorage.setItem("loggedInUser", JSON.stringify(loggedInUser));
+
         setError("");
         navigate("/dashboard");
       } else {

@@ -7,6 +7,7 @@ import ThreatAlerts from "./pages/ThreatAlerts";
 import AIAnalysis from "./pages/AIAnalysis";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import SecuritySummary from "./pages/SecuritySummary";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
@@ -68,6 +69,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/security-summary"
+        element={
+          <ProtectedRoute>
+            <SecuritySummary />
           </ProtectedRoute>
         }
       />

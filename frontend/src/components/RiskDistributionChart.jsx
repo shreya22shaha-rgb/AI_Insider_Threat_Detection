@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -5,12 +6,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
-const data = [
-  { name: "High Risk", value: 10, color: "#EF4444" },
-  { name: "Medium Risk", value: 20, color: "#F59E0B" },
-  { name: "Safe Users", value: 70, color: "#10B981" },
-];
+import api from "../services/api";
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
@@ -35,7 +31,7 @@ function CustomTooltip({ active, payload }) {
       <p style={{ color: "#94A3B8", margin: 0 }}>
         Users:{" "}
         <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>
-          {entry.value}%
+          {entry.value}
         </span>
       </p>
     </div>
@@ -67,6 +63,32 @@ function CustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
 }
 
 function RiskDistributionChart() {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    api
+      .get("/security-summary")
+      .then((response) => {
+        const summary = response.data || {};
+
+        const totalUsers = summary.total_users ?? 0;
+        const highRiskUsers = summary.high_risk_users ?? 0;
+        const criticalUsers = summary.critical_users ?? 0;
+
+        const highRiskOnly = Math.max(highRiskUsers - criticalUsers, 0);
+        const remainingUsers = Math.max(totalUsers - highRiskUsers, 0);
+
+        setData([
+          { name: "Critical Risk", value: criticalUsers, color: "#EF4444" },
+          { name: "High Risk", value: highRiskOnly, color: "#F59E0B" },
+          { name: "Remaining Users", value: remainingUsers, color: "#10B981" },
+        ]);
+      })
+      .catch((error) => {
+        console.error("Security summary API error:", error);
+      });
+  }, []);
+
   const total = data.reduce((s, d) => s + d.value, 0);
 
   return (

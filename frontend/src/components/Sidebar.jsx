@@ -18,6 +18,7 @@ const menuItems = [
   { label: "Activity Logs", icon: <FaClipboardList />, path: "/activity-logs" },
   { label: "Threat Alerts", icon: <FaExclamationTriangle />, path: "/threat-alerts" },
   { label: "AI Analysis", icon: <FaRobot />, path: "/ai-analysis" },
+  { label: "Security Summary", icon: <FaShieldAlt />, path: "/security-summary" },
   { label: "Reports", icon: <FaChartLine />, path: "/reports" },
   { label: "Settings", icon: <FaCog />, path: "/settings" },
 ];
@@ -26,10 +27,10 @@ function Sidebar() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-  localStorage.removeItem("isAuthenticated");
-  localStorage.removeItem("username");
-  navigate("/");
-};
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("username");
+    navigate("/");
+  };
 
   return (
     <aside className="sidebar">
@@ -78,4 +79,4 @@ function Sidebar() {
   );
 }
 
-export default Sidebar; 
+export default Sidebar;

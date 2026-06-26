@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaBell,
   FaSearch,
@@ -11,92 +11,9 @@ import {
   FaUserSecret,
   FaMapMarkerAlt,
   FaDesktop,
-  FaExclamationTriangle,
 } from "react-icons/fa";
+import api from "../services/api";
 
-// ── Alert Data ───────────────────────────────
-const alerts = [
-  {
-    id: "ALT-1001",
-    type: "Brute Force Login Attempt",
-    user: "john.doe@company.com",
-    department: "Engineering",
-    severity: "Critical",
-    status: "Open",
-    time: "2 mins ago",
-    location: "Mumbai, IN",
-    device: "Windows 11 — Chrome",
-    description: "47 failed login attempts detected within 3 minutes from one IP address.",
-    sourceIp: "192.168.1.45",
-  },
-  {
-    id: "ALT-1002",
-    type: "Unusual Data Export",
-    user: "sarah.k@company.com",
-    department: "Finance",
-    severity: "High",
-    status: "Investigating",
-    time: "15 mins ago",
-    location: "Pune, IN",
-    device: "MacOS — Safari",
-    description: "Large export volume detected, 18x above normal user baseline.",
-    sourceIp: "10.0.0.112",
-  },
-  {
-    id: "ALT-1003",
-    type: "Anomalous Login Time",
-    user: "raj.m@company.com",
-    department: "HR",
-    severity: "Medium",
-    status: "Monitoring",
-    time: "1 hour ago",
-    location: "Delhi, IN",
-    device: "Linux — Firefox",
-    description: "Login occurred at 3:47 AM, outside user’s normal working pattern.",
-    sourceIp: "203.0.113.7",
-  },
-  {
-    id: "ALT-1004",
-    type: "Privilege Escalation Attempt",
-    user: "mike.t@company.com",
-    department: "IT Admin",
-    severity: "High",
-    status: "Resolved",
-    time: "3 hours ago",
-    location: "Bangalore, IN",
-    device: "Windows 10 — Edge",
-    description: "Unauthorized admin API access attempts detected across restricted endpoints.",
-    sourceIp: "172.16.0.8",
-  },
-  {
-    id: "ALT-1005",
-    type: "Restricted File Access",
-    user: "priya.s@company.com",
-    department: "Legal",
-    severity: "Low",
-    status: "Resolved",
-    time: "5 hours ago",
-    location: "Pune, IN",
-    device: "Windows 11 — Chrome",
-    description: "User attempted to open documents outside clearance policy scope.",
-    sourceIp: "192.168.3.22",
-  },
-  {
-    id: "ALT-1006",
-    type: "Phishing Link Click",
-    user: "neha.j@company.com",
-    department: "Marketing",
-    severity: "Medium",
-    status: "Open",
-    time: "1 day ago",
-    location: "Hyderabad, IN",
-    device: "MacOS — Chrome",
-    description: "Click event on suspicious email link with known malicious domain signature.",
-    sourceIp: "198.51.100.19",
-  },
-];
-
-// ── Config ───────────────────────────────────
 const severityConfig = {
   Critical: { color: "#EF4444", bg: "#EF444418" },
   High: { color: "#F97316", bg: "#F9731618" },
@@ -111,7 +28,6 @@ const statusConfig = {
   Resolved: { color: "#10B981", bg: "#10B98118" },
 };
 
-// ── Alert Detail Modal ───────────────────────
 function AlertDetailModal({ alert, onClose }) {
   if (!alert) return null;
 
@@ -145,7 +61,6 @@ function AlertDetailModal({ alert, onClose }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <FaBell size={15} color={sev.color} />
@@ -168,7 +83,6 @@ function AlertDetailModal({ alert, onClose }) {
           </button>
         </div>
 
-        {/* Alert Title */}
         <div style={{ marginBottom: 16 }}>
           <p style={{ color: "#F1F5F9", fontSize: 15, fontWeight: 700, margin: 0 }}>
             {alert.type}
@@ -178,30 +92,11 @@ function AlertDetailModal({ alert, onClose }) {
           </p>
         </div>
 
-        {/* Badges */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-          <span
-            style={{
-              background: sev.bg,
-              color: sev.color,
-              padding: "4px 12px",
-              borderRadius: 20,
-              fontSize: 11,
-              fontWeight: 700,
-            }}
-          >
+          <span style={{ background: sev.bg, color: sev.color, padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>
             {alert.severity}
           </span>
-          <span
-            style={{
-              background: stat.bg,
-              color: stat.color,
-              padding: "4px 12px",
-              borderRadius: 20,
-              fontSize: 11,
-              fontWeight: 700,
-            }}
-          >
+          <span style={{ background: stat.bg, color: stat.color, padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>
             {alert.status}
           </span>
           <span
@@ -219,7 +114,6 @@ function AlertDetailModal({ alert, onClose }) {
           </span>
         </div>
 
-        {/* Meta Grid */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
           {[
             { icon: <FaUserSecret size={10} />, label: "User", value: alert.user },
@@ -249,7 +143,6 @@ function AlertDetailModal({ alert, onClose }) {
           ))}
         </div>
 
-        {/* Description */}
         <div
           style={{
             background: "#0F172A",
@@ -275,7 +168,6 @@ function AlertDetailModal({ alert, onClose }) {
           </p>
         </div>
 
-        {/* Source IP */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ color: "#64748B", fontSize: 12 }}>Source IP:</span>
           <code
@@ -296,13 +188,36 @@ function AlertDetailModal({ alert, onClose }) {
   );
 }
 
-// ── Main Component ───────────────────────────
 function RecentSecurityAlertsTable() {
+  const [alerts, setAlerts] = useState([]);
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("time");
   const [sortDir, setSortDir] = useState("desc");
   const [filterSeverity, setFilterSeverity] = useState("All");
   const [selectedAlert, setSelectedAlert] = useState(null);
+
+  useEffect(() => {
+    api.get("/alerts")
+      .then((response) => {
+        const formattedAlerts = response.data.map((item, index) => ({
+          id: `ALT-${1000 + index + 1}`,
+          type: item.activity_type,
+          user: item.employee_name,
+          department: "Unknown",
+          severity: item.risk_level,
+          status: item.risk_level === "High" ? "Open" : item.risk_level === "Medium" ? "Monitoring" : "Resolved",
+          time: "Just now",
+          location: "Unknown",
+          device: "Unknown",
+          description: item.alert,
+          sourceIp: "N/A",
+        }));
+        setAlerts(formattedAlerts);
+      })
+      .catch((error) => {
+        console.error("Alerts API error:", error);
+      });
+  }, []);
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -328,9 +243,7 @@ function RecentSecurityAlertsTable() {
         a.user.toLowerCase().includes(search.toLowerCase()) ||
         a.department.toLowerCase().includes(search.toLowerCase());
 
-      const matchSeverity =
-        filterSeverity === "All" || a.severity === filterSeverity;
-
+      const matchSeverity = filterSeverity === "All" || a.severity === filterSeverity;
       return matchSearch && matchSeverity;
     })
     .sort((a, b) => {
@@ -358,7 +271,6 @@ function RecentSecurityAlertsTable() {
           fontFamily: "Inter, sans-serif",
         }}
       >
-        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -402,15 +314,7 @@ function RecentSecurityAlertsTable() {
                 <p style={{ color: b.color, fontSize: 18, fontWeight: 700, margin: 0 }}>
                   {b.value}
                 </p>
-                <p
-                  style={{
-                    color: "#64748B",
-                    fontSize: 9,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    margin: 0,
-                  }}
-                >
+                <p style={{ color: "#64748B", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
                   {b.label}
                 </p>
               </div>
@@ -418,7 +322,6 @@ function RecentSecurityAlertsTable() {
           </div>
         </div>
 
-        {/* Search */}
         <div
           style={{
             display: "flex",
@@ -460,7 +363,6 @@ function RecentSecurityAlertsTable() {
           )}
         </div>
 
-        {/* Severity Filter */}
         <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
           {["All", "Critical", "High", "Medium", "Low"].map((sev) => (
             <button
@@ -482,7 +384,6 @@ function RecentSecurityAlertsTable() {
           ))}
         </div>
 
-        {/* Table */}
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
@@ -631,7 +532,6 @@ function RecentSecurityAlertsTable() {
           </table>
         </div>
 
-        {/* Footer */}
         <div
           style={{
             display: "flex",

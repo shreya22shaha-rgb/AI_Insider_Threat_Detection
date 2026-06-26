@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -8,19 +9,12 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-
-const data = [
-  { month: "Jan", threats: 5 },
-  { month: "Feb", threats: 8 },
-  { month: "Mar", threats: 12 },
-  { month: "Apr", threats: 9 },
-  { month: "May", threats: 15 },
-  { month: "Jun", threats: 18 },
-  { month: "Jul", threats: 14 },
-];
+import api from "../services/api";
 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
+
+  const entry = payload[0].payload;
 
   return (
     <div
@@ -43,10 +37,32 @@ function CustomTooltip({ active, payload, label }) {
       >
         {label}
       </p>
-      <p style={{ color: "#94A3B8", margin: 0 }}>
-        Threats:{" "}
+      <p style={{ color: "#94A3B8", margin: "0 0 4px" }}>
+        Current Score:{" "}
         <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>
-          {payload[0].value}
+          {entry.score}
+        </span>
+      </p>
+      <p style={{ color: "#94A3B8", margin: "0 0 4px" }}>
+        Previous Score:{" "}
+        <span style={{ color: "#fff", fontWeight: 700 }}>
+          {entry.previousScore}
+        </span>
+      </p>
+      <p style={{ color: "#94A3B8", margin: 0 }}>
+        Trend:{" "}
+        <span
+          style={{
+            color:
+              entry.trend === "Increasing"
+                ? "#EF4444"
+                : entry.trend === "Decreasing"
+                ? "#10B981"
+                : "#F59E0B",
+            fontWeight: 700,
+          }}
+        >
+          {entry.trend}
         </span>
       </p>
     </div>
@@ -63,10 +79,32 @@ function CustomDot({ cx, cy }) {
 }
 
 function ThreatTrendChart() {
-  const total = data.reduce((s, d) => s + d.threats, 0);
-  const max = Math.max(...data.map((d) => d.threats));
-  const avg = (total / data.length).toFixed(1);
-  const peak = data.find((d) => d.threats === max);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    api
+      .get("/risk-trend")
+      .then((response) => {
+        const raw = response.data || [];
+
+        const formatted = raw.map((item) => ({
+          employee: item.employee_name,
+          score: item.current_score ?? 0,
+          previousScore: item.previous_score ?? 0,
+          trend: item.trend ?? "Stable",
+        }));
+
+        setData(formatted);
+      })
+      .catch((error) => {
+        console.error("Risk trend API error:", error);
+      });
+  }, []);
+
+  const total = data.reduce((s, d) => s + d.score, 0);
+  const max = data.length ? Math.max(...data.map((d) => d.score)) : 0;
+  const avg = data.length ? (total / data.length).toFixed(1) : "0.0";
+  const peak = data.find((d) => d.score === max);
 
   return (
     <div
@@ -89,17 +127,17 @@ function ThreatTrendChart() {
       >
         <div>
           <h2 style={{ color: "#F1F5F9", fontSize: 16, fontWeight: 600, margin: 0 }}>
-            Threat Detection Trend
+            Risk Trend Analysis
           </h2>
           <p style={{ color: "#64748B", fontSize: 12, margin: "4px 0 0" }}>
-            Monthly threat incidents over time
+            Current employee risk score trends
           </p>
         </div>
 
         <div style={{ display: "flex", gap: 10 }}>
           {[
             { label: "Total", value: total, color: "#38BDF8" },
-            { label: "Avg/Mo", value: avg, color: "#A78BFA" },
+            { label: "Avg", value: avg, color: "#A78BFA" },
             { label: "Peak", value: max, color: "#F97316" },
           ].map((kpi) => (
             <div
@@ -148,7 +186,7 @@ function ThreatTrendChart() {
           <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
 
           <XAxis
-            dataKey="month"
+            dataKey="employee"
             axisLine={false}
             tickLine={false}
             tick={{ fill: "#64748B", fontSize: 12, fontFamily: "Inter, sans-serif" }}
@@ -180,11 +218,11 @@ function ThreatTrendChart() {
             }}
           />
 
-          <ReferenceLine x={peak?.month} stroke="#F9731633" strokeWidth={1} />
+          {peak && <ReferenceLine x={peak.employee} stroke="#F9731633" strokeWidth={1} />}
 
           <Area
             type="monotone"
-            dataKey="threats"
+            dataKey="score"
             stroke="url(#lineGrad)"
             strokeWidth={3}
             fill="url(#areaGrad)"
