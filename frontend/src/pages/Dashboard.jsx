@@ -12,7 +12,7 @@ import api from "../services/api";
 import "../styles/Dashboard.css";
 
 function Dashboard() {
-  const [dashboardData, setDashboardData] = useState(null);
+  const [dashboardData, setDashboardData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
@@ -28,7 +28,7 @@ function Dashboard() {
     api
       .get("/dashboard")
       .then((response) => {
-        setDashboardData(response.data);
+        setDashboardData(response.data || {});
       })
       .catch((error) => {
         console.error("Dashboard API error:", error);
@@ -39,31 +39,51 @@ function Dashboard() {
       });
   }, []);
 
+  const totalActivities =
+    dashboardData?.total_activities ??
+    dashboardData?.totalActivities ??
+    0;
+
+  const highRisk =
+    dashboardData?.high_risk ??
+    dashboardData?.highRisk ??
+    0;
+
+  const mediumRisk =
+    dashboardData?.medium_risk ??
+    dashboardData?.mediumRisk ??
+    0;
+
+  const lowRisk =
+    dashboardData?.low_risk ??
+    dashboardData?.lowRisk ??
+    0;
+
   const stats = [
     {
       title: "Total Activities",
-      value: dashboardData?.total_activities ?? "...",
+      value: totalActivities,
       trend: "+12%",
       icon: <FaUsers />,
       accent: "blue",
     },
     {
       title: "High Risk",
-      value: dashboardData?.high_risk ?? "...",
+      value: highRisk,
       trend: "+4%",
       icon: <FaExclamationTriangle />,
       accent: "red",
     },
     {
       title: "Medium Risk",
-      value: dashboardData?.medium_risk ?? "...",
+      value: mediumRisk,
       trend: "+2.1%",
       icon: <FaShieldAlt />,
       accent: "green",
     },
     {
       title: "Low Risk",
-      value: dashboardData?.low_risk ?? "...",
+      value: lowRisk,
       trend: "+1.8%",
       icon: <FaChartLine />,
       accent: "cyan",
