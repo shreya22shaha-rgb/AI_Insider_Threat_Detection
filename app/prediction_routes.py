@@ -3,11 +3,15 @@ from sqlalchemy.orm import Session
 
 from .database import SessionLocal
 from .models import EmployeeActivity
-from .ai_engine import (
+from app.ai_engine import (
     predict_risk,
     analyze_behavior,
     classify_threat,
-    risk_trend
+    risk_trend,
+    ai_recommendation,
+    threat_insight,
+    department_risk,
+    security_score
 )
 
 router = APIRouter()
@@ -153,3 +157,120 @@ def risk_trend_analysis():
         })
 
     return result
+
+@router.get("/ai-recommendations")
+def get_ai_recommendations():
+
+    sample_data = [
+        {
+            "employee_name": "Rahul",
+            "risk_level": "High"
+        },
+        {
+            "employee_name": "Amit",
+            "risk_level": "Medium"
+        },
+        {
+            "employee_name": "Sneha",
+            "risk_level": "Low"
+        }
+    ]
+
+    result = []
+
+    for employee in sample_data:
+
+        result.append({
+            "employee_name": employee["employee_name"],
+            "risk_level": employee["risk_level"],
+            "recommendation": ai_recommendation(
+                employee["risk_level"]
+            )
+        })
+
+    return result
+
+@router.get("/threat-insights")
+def get_threat_insights():
+
+    high = 8
+    medium = 5
+    low = 2
+
+    return {
+        "high_risk": high,
+        "medium_risk": medium,
+        "low_risk": low,
+        "insight": threat_insight(
+            high,
+            medium,
+            low
+        )
+    }
+
+@router.get("/department-risk-analysis")
+def get_department_risk():
+
+    departments = [
+        {
+            "department": "IT",
+            "risk_score": 85
+        },
+        {
+            "department": "Finance",
+            "risk_score": 60
+        },
+        {
+            "department": "HR",
+            "risk_score": 35
+        },
+        {
+            "department": "Sales",
+            "risk_score": 15
+        }
+    ]
+
+    result = []
+
+    for dept in departments:
+
+        result.append({
+            "department": dept["department"],
+            "risk_score": dept["risk_score"],
+            "risk_level": department_risk(
+                dept["risk_score"]
+            )
+        })
+
+    return result
+
+@router.get("/security-score")
+def get_security_score():
+
+    total_users = 10
+    high_risk_users = 2
+
+    score = security_score(
+        total_users,
+        high_risk_users
+    )
+
+    return {
+        "total_users": total_users,
+        "high_risk_users": high_risk_users,
+        "overall_security_score": score
+    }
+
+@router.get("/download-report")
+def download_report():
+
+    return {
+        "report_name": "AI Insider Threat Report",
+        "generated_by": "AI Threat Detection System",
+        "total_users": 10,
+        "high_risk_users": 2,
+        "medium_risk_users": 3,
+        "low_risk_users": 5,
+        "overall_security_score": 80,
+        "status": "Report Generated Successfully"
+    }

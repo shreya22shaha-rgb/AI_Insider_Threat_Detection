@@ -33,3 +33,66 @@ def risk_trend(current_score, previous_score):
         return "Decreasing"
     else:
         return "Stable"
+    
+# -------------------------------
+# AI Recommendations
+# -------------------------------
+
+def ai_recommendation(risk_level):
+
+    if risk_level == "High":
+        return "Immediately disable external USB access and notify Security Team."
+
+    elif risk_level == "Medium":
+        return "Monitor user activities for the next 24 hours."
+
+    else:
+        return "No immediate action required."
+
+
+# -------------------------------
+# Threat Insights
+# -------------------------------
+
+def threat_insight(high, medium, low):
+
+    if high > medium and high > low:
+        return "High-risk insider activities are increasing."
+
+    elif medium > high:
+        return "Most threats are moderate. Continue monitoring."
+
+    else:
+        return "Overall security posture is stable."
+
+
+# -------------------------------
+# Department Risk
+# -------------------------------
+
+def department_risk(score):
+
+    if score >= 80:
+        return "Critical"
+
+    elif score >= 50:
+        return "High"
+
+    elif score >= 25:
+        return "Medium"
+
+    return "Low"
+
+
+# -------------------------------
+# Overall Security Score
+# -------------------------------
+
+def security_score(total_users, high_risk):
+
+    score = 100 - (high_risk * 10)
+
+    if score < 0:
+        score = 0
+
+    return score
