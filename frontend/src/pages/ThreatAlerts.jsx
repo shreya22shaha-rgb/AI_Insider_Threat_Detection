@@ -38,7 +38,7 @@ function ThreatAlerts() {
   }, []);
 
   useEffect(() => {
-    api.get("/threat-alerts")
+    api.get("/alerts")
       .then((res) => {
         setAlerts(Array.isArray(res.data) ? res.data : []);
       })

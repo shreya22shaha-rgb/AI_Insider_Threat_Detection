@@ -24,7 +24,14 @@ function StatCard({ title, value, icon, color }) {
         boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
         <div
           style={{
             width: 42,
@@ -41,7 +48,14 @@ function StatCard({ title, value, icon, color }) {
         </div>
       </div>
       <p style={{ color: "#64748B", fontSize: 12, margin: 0 }}>{title}</p>
-      <h2 style={{ color: "#F1F5F9", fontSize: 28, margin: "8px 0 0", fontWeight: 700 }}>
+      <h2
+        style={{
+          color: "#F1F5F9",
+          fontSize: 28,
+          margin: "8px 0 0",
+          fontWeight: 700,
+        }}
+      >
         {value}
       </h2>
     </div>
@@ -63,14 +77,25 @@ function SecuritySummary() {
 
   useEffect(() => {
     Promise.all([
-      api.get("/security-summary").catch(() => ({ data: null })),
-      api.get("/insider-threat-rules").catch(() => ({ data: [] })),
-      api.get("/failed-login-alerts").catch(() => ({ data: [] })),
+      api.get("/security-summary").catch((err) => {
+        console.error("security-summary error:", err?.response?.data || err);
+        return { data: null };
+      }),
+      api.get("/insider-threat-rules").catch((err) => {
+        console.error("insider-threat-rules error:", err?.response?.data || err);
+        return { data: [] };
+      }),
+      api.get("/failed-login-alerts").catch((err) => {
+        console.error("failed-login-alerts error:", err?.response?.data || err);
+        return { data: [] };
+      }),
     ])
       .then(([summaryRes, rulesRes, failedRes]) => {
         setSummary(summaryRes.data || {});
         setRules(Array.isArray(rulesRes.data) ? rulesRes.data : rulesRes.data?.rules || []);
-        setFailedLogins(Array.isArray(failedRes.data) ? failedRes.data : failedRes.data?.alerts || []);
+        setFailedLogins(
+          Array.isArray(failedRes.data) ? failedRes.data : failedRes.data?.alerts || []
+        );
       })
       .catch((error) => {
         console.error("Security summary error:", error);
@@ -96,7 +121,8 @@ function SecuritySummary() {
           <div>
             <h1 className="dashboard-title">Security Summary</h1>
             <p className="dashboard-subtitle">
-              Overview of users, high-risk accounts, critical users, alerts generated, rules, and failed login attempts.
+              Overview of users, high-risk accounts, critical users, alerts generated, rules,
+              and failed login attempts.
             </p>
           </div>
 
@@ -133,12 +159,42 @@ function SecuritySummary() {
                 marginBottom: 24,
               }}
             >
-              <StatCard title="Total Users" value={totalUsers} icon={<FaUsers size={18} />} color="#38BDF8" />
-              <StatCard title="High Risk Users" value={highRiskUsers} icon={<FaUserShield size={18} />} color="#F97316" />
-              <StatCard title="Critical Users" value={criticalUsers} icon={<FaExclamationTriangle size={18} />} color="#EF4444" />
-              <StatCard title="Alerts Generated" value={alertsGenerated} icon={<FaBell size={18} />} color="#F59E0B" />
-              <StatCard title="Failed Login Alerts" value={failedLoginCount} icon={<FaLock size={18} />} color="#A78BFA" />
-              <StatCard title="Active Threat Rules" value={activeRules} icon={<FaShieldAlt size={18} />} color="#10B981" />
+              <StatCard
+                title="Total Users"
+                value={totalUsers}
+                icon={<FaUsers size={18} />}
+                color="#38BDF8"
+              />
+              <StatCard
+                title="High Risk Users"
+                value={highRiskUsers}
+                icon={<FaUserShield size={18} />}
+                color="#F97316"
+              />
+              <StatCard
+                title="Critical Users"
+                value={criticalUsers}
+                icon={<FaExclamationTriangle size={18} />}
+                color="#EF4444"
+              />
+              <StatCard
+                title="Alerts Generated"
+                value={alertsGenerated}
+                icon={<FaBell size={18} />}
+                color="#F59E0B"
+              />
+              <StatCard
+                title="Failed Login Alerts"
+                value={failedLoginCount}
+                icon={<FaLock size={18} />}
+                color="#A78BFA"
+              />
+              <StatCard
+                title="Active Threat Rules"
+                value={activeRules}
+                icon={<FaShieldAlt size={18} />}
+                color="#10B981"
+              />
             </div>
 
             {/* Bottom Grid */}
@@ -158,13 +214,24 @@ function SecuritySummary() {
                   border: "1px solid #334155",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 14,
+                  }}
+                >
                   <FaGavel color="#10B981" />
-                  <h3 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>Insider Threat Rules</h3>
+                  <h3 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>
+                    Insider Threat Rules
+                  </h3>
                 </div>
 
                 {rules.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>No active rules found.</p>
+                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                    No active rules found.
+                  </p>
                 ) : (
                   <div style={{ display: "grid", gap: 10 }}>
                     {rules.slice(0, 6).map((rule, idx) => (
@@ -177,10 +244,23 @@ function SecuritySummary() {
                           padding: 12,
                         }}
                       >
-                        <p style={{ color: "#F1F5F9", fontSize: 13, fontWeight: 600, margin: 0 }}>
+                        <p
+                          style={{
+                            color: "#F1F5F9",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            margin: 0,
+                          }}
+                        >
                           {rule.rule_name || rule.name || `Rule ${idx + 1}`}
                         </p>
-                        <p style={{ color: "#64748B", fontSize: 12, margin: "4px 0 0" }}>
+                        <p
+                          style={{
+                            color: "#64748B",
+                            fontSize: 12,
+                            margin: "4px 0 0",
+                          }}
+                        >
                           {rule.description || "Threat detection rule active"}
                         </p>
                       </div>
@@ -198,13 +278,24 @@ function SecuritySummary() {
                   border: "1px solid #334155",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 14,
+                  }}
+                >
                   <FaLock color="#A78BFA" />
-                  <h3 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>Failed Login Alerts</h3>
+                  <h3 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>
+                    Failed Login Alerts
+                  </h3>
                 </div>
 
                 {failedLogins.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>No failed login alerts found.</p>
+                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                    No failed login alerts found.
+                  </p>
                 ) : (
                   <div style={{ display: "grid", gap: 10 }}>
                     {failedLogins.slice(0, 6).map((item, idx) => (
@@ -217,10 +308,23 @@ function SecuritySummary() {
                           padding: 12,
                         }}
                       >
-                        <p style={{ color: "#F1F5F9", fontSize: 13, fontWeight: 600, margin: 0 }}>
+                        <p
+                          style={{
+                            color: "#F1F5F9",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            margin: 0,
+                          }}
+                        >
                           {item.employee_name || item.user || `Login Alert ${idx + 1}`}
                         </p>
-                        <p style={{ color: "#64748B", fontSize: 12, margin: "4px 0 0" }}>
+                        <p
+                          style={{
+                            color: "#64748B",
+                            fontSize: 12,
+                            margin: "4px 0 0",
+                          }}
+                        >
                           {item.timestamp
                             ? new Date(item.timestamp).toLocaleString()
                             : "Recent failed login attempt"}

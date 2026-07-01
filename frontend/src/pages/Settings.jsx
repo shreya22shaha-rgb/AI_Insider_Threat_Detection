@@ -1,20 +1,29 @@
+import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import "../styles/Dashboard.css";
 
 function Settings() {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("loggedInUser");
+    if (stored) setCurrentUser(JSON.parse(stored));
+  }, []);
+
   return (
     <>
       <Sidebar />
 
       <div className="dashboard-content">
-        <Navbar />
+        <Navbar user={currentUser} />
 
         <div className="dashboard-header">
           <div>
             <h1 className="dashboard-title">Settings</h1>
             <p className="dashboard-subtitle">
-              Manage security preferences, alerts, authentication controls, and account protection settings.
+              Manage security preferences, alerts, authentication controls, and account protection
+              settings.
             </p>
           </div>
 
@@ -31,6 +40,7 @@ function Settings() {
             gap: 20,
           }}
         >
+          {/* Authentication */}
           <div
             style={{
               background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
@@ -46,23 +56,48 @@ function Settings() {
             </p>
 
             <div style={{ marginTop: 18, display: "grid", gap: 12 }}>
-              <label style={{ color: "#CBD5E1", display: "flex", justifyContent: "space-between" }}>
+              <label
+                style={{
+                  color: "#CBD5E1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
                 <span>Enable MFA</span>
                 <input type="checkbox" defaultChecked />
               </label>
 
-              <label style={{ color: "#CBD5E1", display: "flex", justifyContent: "space-between" }}>
+              <label
+                style={{
+                  color: "#CBD5E1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
                 <span>Require strong passwords</span>
                 <input type="checkbox" defaultChecked />
               </label>
 
-              <label style={{ color: "#CBD5E1", display: "flex", justifyContent: "space-between" }}>
+              <label
+                style={{
+                  color: "#CBD5E1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
                 <span>Auto session timeout</span>
                 <input type="checkbox" defaultChecked />
               </label>
             </div>
           </div>
 
+          {/* Alert Preferences */}
           <div
             style={{
               background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
@@ -78,23 +113,48 @@ function Settings() {
             </p>
 
             <div style={{ marginTop: 18, display: "grid", gap: 12 }}>
-              <label style={{ color: "#CBD5E1", display: "flex", justifyContent: "space-between" }}>
+              <label
+                style={{
+                  color: "#CBD5E1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
                 <span>Suspicious login alerts</span>
                 <input type="checkbox" defaultChecked />
               </label>
 
-              <label style={{ color: "#CBD5E1", display: "flex", justifyContent: "space-between" }}>
+              <label
+                style={{
+                  color: "#CBD5E1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
                 <span>Failed login attempt alerts</span>
                 <input type="checkbox" defaultChecked />
               </label>
 
-              <label style={{ color: "#CBD5E1", display: "flex", justifyContent: "space-between" }}>
+              <label
+                style={{
+                  color: "#CBD5E1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
                 <span>Data export alerts</span>
                 <input type="checkbox" defaultChecked />
               </label>
             </div>
           </div>
 
+          {/* Active Sessions */}
           <div
             style={{
               background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
@@ -110,18 +170,65 @@ function Settings() {
             </p>
 
             <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-              <div style={{ background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: 12 }}>
-                <p style={{ color: "#F1F5F9", margin: 0, fontWeight: 600 }}>Windows 11 — Chrome</p>
-                <p style={{ color: "#64748B", margin: "4px 0 0", fontSize: 12 }}>Mumbai, IN • Active now</p>
+              <div
+                style={{
+                  background: "#0F172A",
+                  border: "1px solid #334155",
+                  borderRadius: 10,
+                  padding: 12,
+                }}
+              >
+                <p
+                  style={{
+                    color: "#F1F5F9",
+                    margin: 0,
+                    fontWeight: 600,
+                  }}
+                >
+                  Windows 11 — Chrome
+                </p>
+                <p
+                  style={{
+                    color: "#64748B",
+                    margin: "4px 0 0",
+                    fontSize: 12,
+                  }}
+                >
+                  Mumbai, IN • Active now
+                </p>
               </div>
 
-              <div style={{ background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: 12 }}>
-                <p style={{ color: "#F1F5F9", margin: 0, fontWeight: 600 }}>MacOS — Safari</p>
-                <p style={{ color: "#64748B", margin: "4px 0 0", fontSize: 12 }}>Pune, IN • 2 hours ago</p>
+              <div
+                style={{
+                  background: "#0F172A",
+                  border: "1px solid #334155",
+                  borderRadius: 10,
+                  padding: 12,
+                }}
+              >
+                <p
+                  style={{
+                    color: "#F1F5F9",
+                    margin: 0,
+                    fontWeight: 600,
+                  }}
+                >
+                  MacOS — Safari
+                </p>
+                <p
+                  style={{
+                    color: "#64748B",
+                    margin: "4px 0 0",
+                    fontSize: 12,
+                  }}
+                >
+                  Pune, IN • 2 hours ago
+                </p>
               </div>
             </div>
           </div>
 
+          {/* Danger Zone */}
           <div
             style={{
               background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
@@ -136,7 +243,14 @@ function Settings() {
               High-impact actions affecting account or session access.
             </p>
 
-            <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+            <div
+              style={{
+                marginTop: 18,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
               <button
                 style={{
                   background: "#7F1D1D",
