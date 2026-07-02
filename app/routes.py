@@ -656,3 +656,28 @@ def get_audit_logs(
     )
 
     return logs
+
+@router.get("/users")
+def get_users(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    require_role(
+        current_user,
+        ["Admin"]
+    )
+
+    users = db.query(User).all()
+
+    result = []
+
+    for user in users:
+        result.append({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": user.role
+        })
+
+    return result
