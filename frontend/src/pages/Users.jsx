@@ -3,7 +3,7 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import "../styles/Dashboard.css";
 import api from "../services/api";
-import { FaSearch, FaEye, FaUsers, FaExclamationTriangle } from "react-icons/fa";
+import { FaSearch, FaEye, FaUsers, FaExclamationTriangle, FaTimes } from "react-icons/fa";
 
 function getRiskStyle(score) {
   if (score >= 75) {
@@ -46,6 +46,7 @@ function Users() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [currentUser, setCurrentUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("loggedInUser");
@@ -152,7 +153,6 @@ function Users() {
             boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
           }}
         >
-          {/* Header */}
           <div
             style={{
               display: "flex",
@@ -210,7 +210,6 @@ function Users() {
             </div>
           </div>
 
-          {/* Search */}
           <div
             style={{
               display: "flex",
@@ -240,7 +239,6 @@ function Users() {
             />
           </div>
 
-          {/* Filters */}
           <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
             {["All", "Critical", "High", "Medium", "Low"].map((level) => (
               <button
@@ -262,7 +260,6 @@ function Users() {
             ))}
           </div>
 
-          {/* Table */}
           {loading ? (
             <div style={{ color: "#64748B", textAlign: "center", padding: "40px 0" }}>
               Loading users...
@@ -385,6 +382,7 @@ function Users() {
 
                           <td style={{ padding: "14px 12px" }}>
                             <button
+                              onClick={() => setSelectedUser(user)}
                               style={{
                                 background: "#1E40AF20",
                                 color: "#60A5FA",
@@ -413,6 +411,109 @@ function Users() {
           )}
         </div>
       </div>
+
+      {selectedUser && (
+        <div
+          onClick={() => setSelectedUser(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(2, 6, 23, 0.75)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: 16,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 460,
+              background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
+              border: "1px solid #334155",
+              borderRadius: 16,
+              padding: 24,
+              boxShadow: "0 10px 40px rgba(0,0,0,0.45)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 20,
+              }}
+            >
+              <div>
+                <h3 style={{ color: "#F8FAFC", margin: 0, fontSize: 20 }}>
+                  {selectedUser.name}
+                </h3>
+                <p style={{ color: "#64748B", margin: "4px 0 0", fontSize: 12 }}>
+                  {selectedUser.id}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setSelectedUser(null)}
+                style={{
+                  color: "#94A3B8",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 16,
+                }}
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ padding: 12, borderRadius: 10, background: "#0F172A", border: "1px solid #1E293B" }}>
+                <div style={{ color: "#64748B", fontSize: 11, marginBottom: 4 }}>Department</div>
+                <div style={{ color: "#F1F5F9", fontSize: 14, fontWeight: 600 }}>{selectedUser.department}</div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 10, background: "#0F172A", border: "1px solid #1E293B" }}>
+                <div style={{ color: "#64748B", fontSize: 11, marginBottom: 4 }}>Risk Score</div>
+                <div style={{ color: getRiskStyle(selectedUser.riskScore).color, fontSize: 14, fontWeight: 700 }}>
+                  {selectedUser.riskScore}%
+                </div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 10, background: "#0F172A", border: "1px solid #1E293B" }}>
+                <div style={{ color: "#64748B", fontSize: 11, marginBottom: 4 }}>Threat Count</div>
+                <div style={{ color: "#F59E0B", fontSize: 14, fontWeight: 700 }}>
+                  {selectedUser.threats}
+                </div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 10, background: "#0F172A", border: "1px solid #1E293B" }}>
+                <div style={{ color: "#64748B", fontSize: 11, marginBottom: 4 }}>Status</div>
+                <div
+                  style={{
+                    display: "inline-block",
+                    background: getRiskStyle(selectedUser.riskScore).bg,
+                    color: getRiskStyle(selectedUser.riskScore).color,
+                    borderRadius: 999,
+                    padding: "4px 12px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {getRiskStyle(selectedUser.riskScore).label}
+                </div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 10, background: "#0F172A", border: "1px solid #1E293B" }}>
+                <div style={{ color: "#64748B", fontSize: 11, marginBottom: 4 }}>Last Active</div>
+                <div style={{ color: "#F1F5F9", fontSize: 14, fontWeight: 600 }}>{selectedUser.lastActive}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

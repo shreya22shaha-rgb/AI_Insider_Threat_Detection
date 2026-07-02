@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import "../styles/Dashboard.css";
@@ -90,32 +90,86 @@ function AIAnalysis() {
   }, []);
 
   useEffect(() => {
-    Promise.all([
-      api.get("/risk-predictions").catch(() => ({ data: [] })),
-      api.get("/behavior-analysis").catch(() => ({ data: [] })),
-      api.get("/threat-classification").catch(() => ({ data: [] })),
-    ])
-      .then(([predRes, behRes, clsRes]) => {
-        setPredictions(Array.isArray(predRes.data) ? predRes.data : predRes.data?.predictions || []);
-        setBehaviors(Array.isArray(behRes.data) ? behRes.data : behRes.data?.analysis || []);
-        setClassifications(Array.isArray(clsRes.data) ? clsRes.data : clsRes.data?.classifications || []);
-      })
-      .catch((err) => {
+    const fetchAIData = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const [predRes, behRes, clsRes] = await Promise.all([
+          api.get("/risk-predictions").catch((err) => {
+            console.error("risk-predictions error:", err?.response?.data || err);
+            return { data: [] };
+          }),
+          api.get("/behavior-analysis").catch((err) => {
+            console.error("behavior-analysis error:", err?.response?.data || err);
+            return { data: [] };
+          }),
+          api.get("/threat-classification").catch((err) => {
+            console.error("threat-classification error:", err?.response?.data || err);
+            return { data: [] };
+          }),
+        ]);
+
+        console.log("risk-predictions:", predRes.data);
+        console.log("behavior-analysis:", behRes.data);
+        console.log("threat-classification:", clsRes.data);
+
+        setPredictions(
+          Array.isArray(predRes.data) ? predRes.data : predRes.data?.predictions || []
+        );
+
+        setBehaviors(
+          Array.isArray(behRes.data) ? behRes.data : behRes.data?.analysis || []
+        );
+
+        setClassifications(
+          Array.isArray(clsRes.data) ? clsRes.data : clsRes.data?.classifications || []
+        );
+      } catch (err) {
         console.error("AI analysis API error:", err);
         setError("Failed to load AI analysis data.");
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAIData();
   }, []);
 
-  const totalPredictions = predictions.length;
-  const highRiskPredictions = predictions.filter(
-    (item) =>
-      item.risk_level?.toLowerCase() === "high" ||
-      item.risk_level?.toLowerCase() === "critical"
-  ).length;
+  const normalizedPredictions = useMemo(() => {
+    return predictions.map((item, idx) => ({
+      name: item.employee_name || item.user || `Prediction ${idx + 1}`,
+      score: item.risk_score ?? item.score ?? "N/A",
+      riskLevel: item.predicted_risk || item.risk_level || "Unknown",
+    }));
+  }, [predictions]);
 
-  const suspiciousBehaviors = behaviors.length;
-  const classifiedThreats = classifications.length;
+  const normalizedBehaviors = useMemo(() => {
+    return behaviors.map((item, idx) => ({
+      name: item.employee_name || item.user || `Behavior ${idx + 1}`,
+      text: `Activity Count: ${item.activity_count ?? 0} — Status: ${
+        item.behavior_status || "Unknown"
+      }`,
+    }));
+  }, [behaviors]);
+
+  const normalizedClassifications = useMemo(() => {
+    return classifications.map((item, idx) => ({
+      name: item.employee_name || item.user || `Threat ${idx + 1}`,
+      threatType: item.threat_classification || "Unclassified Threat",
+      riskLevel: item.risk_level || "Unknown",
+    }));
+  }, [classifications]);
+
+  const totalPredictions = normalizedPredictions.length;
+
+  const highRiskPredictions = normalizedPredictions.filter((item) => {
+    const level = item.riskLevel?.toLowerCase();
+    return level === "high" || level === "critical";
+  }).length;
+
+  const suspiciousBehaviors = normalizedBehaviors.length;
+  const classifiedThreats = normalizedClassifications.length;
 
   return (
     <>
@@ -147,7 +201,6 @@ function AIAnalysis() {
             boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
           }}
         >
-          {/* Top */}
           <div
             style={{
               display: "flex",
@@ -195,20 +248,26 @@ function AIAnalysis() {
               {error}
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
-              {/* Risk Predictions */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: 16,
+              }}
+            >
               <InsightCard
                 title="Risk Predictions"
                 icon={<FaChartLine color="#38BDF8" size={14} />}
               >
-                {predictions.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>No prediction data available.</p>
+                {normalizedPredictions.length === 0 ? (
+                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                    No prediction data available.
+                  </p>
                 ) : (
                   <div style={{ display: "grid", gap: 12 }}>
-                    {predictions.slice(0, 5).map((item, idx) => {
-                      const isHigh =
-                        item.risk_level?.toLowerCase() === "high" ||
-                        item.risk_level?.toLowerCase() === "critical";
+                    {normalizedPredictions.slice(0, 5).map((item, idx) => {
+                      const level = item.riskLevel?.toLowerCase();
+                      const isHigh = level === "high" || level === "critical";
 
                       return (
                         <div
@@ -222,15 +281,22 @@ function AIAnalysis() {
                         >
                           <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                             <div>
-                              <p style={{ color: "#F1F5F9", fontSize: 13, fontWeight: 600, margin: 0 }}>
-                                {item.employee_name || item.user || `Prediction ${idx + 1}`}
+                              <p
+                                style={{
+                                  color: "#F1F5F9",
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  margin: 0,
+                                }}
+                              >
+                                {item.name}
                               </p>
                               <p style={{ color: "#64748B", fontSize: 12, margin: "4px 0 0" }}>
-                                Score: {item.score ?? item.risk_score ?? "N/A"}
+                                Score: {item.score}
                               </p>
                             </div>
                             <Badge
-                              label={item.risk_level || "Unknown"}
+                              label={item.riskLevel}
                               color={isHigh ? "#EF4444" : "#10B981"}
                               bg={isHigh ? "#EF444420" : "#10B98120"}
                             />
@@ -242,16 +308,17 @@ function AIAnalysis() {
                 )}
               </InsightCard>
 
-              {/* Behavior Analysis */}
               <InsightCard
                 title="Behavior Analysis"
                 icon={<FaBrain color="#A78BFA" size={14} />}
               >
-                {behaviors.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>No behavior analysis available.</p>
+                {normalizedBehaviors.length === 0 ? (
+                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                    No behavior analysis available.
+                  </p>
                 ) : (
                   <div style={{ display: "grid", gap: 12 }}>
-                    {behaviors.slice(0, 5).map((item, idx) => (
+                    {normalizedBehaviors.slice(0, 5).map((item, idx) => (
                       <div
                         key={idx}
                         style={{
@@ -261,11 +328,18 @@ function AIAnalysis() {
                           padding: 12,
                         }}
                       >
-                        <p style={{ color: "#F1F5F9", fontSize: 13, fontWeight: 600, margin: 0 }}>
-                          {item.employee_name || item.user || `Behavior ${idx + 1}`}
+                        <p
+                          style={{
+                            color: "#F1F5F9",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            margin: 0,
+                          }}
+                        >
+                          {item.name}
                         </p>
                         <p style={{ color: "#94A3B8", fontSize: 12, margin: "6px 0 0" }}>
-                          {item.behavior || item.analysis || item.description || "Behavior anomaly detected"}
+                          {item.text}
                         </p>
                       </div>
                     ))}
@@ -273,16 +347,17 @@ function AIAnalysis() {
                 )}
               </InsightCard>
 
-              {/* Threat Classification */}
               <InsightCard
                 title="Threat Classification"
                 icon={<FaShieldAlt color="#10B981" size={14} />}
               >
-                {classifications.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>No classification data available.</p>
+                {normalizedClassifications.length === 0 ? (
+                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                    No classification data available.
+                  </p>
                 ) : (
                   <div style={{ display: "grid", gap: 12 }}>
-                    {classifications.slice(0, 5).map((item, idx) => (
+                    {normalizedClassifications.slice(0, 5).map((item, idx) => (
                       <div
                         key={idx}
                         style={{
@@ -294,11 +369,18 @@ function AIAnalysis() {
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                           <div>
-                            <p style={{ color: "#F1F5F9", fontSize: 13, fontWeight: 600, margin: 0 }}>
-                              {item.employee_name || item.user || `Threat ${idx + 1}`}
+                            <p
+                              style={{
+                                color: "#F1F5F9",
+                                fontSize: 13,
+                                fontWeight: 600,
+                                margin: 0,
+                              }}
+                            >
+                              {item.name}
                             </p>
                             <p style={{ color: "#64748B", fontSize: 12, margin: "4px 0 0" }}>
-                              {item.threat_type || item.classification || "Unclassified Threat"}
+                              {item.threatType}
                             </p>
                           </div>
                           <FaExclamationTriangle color="#F59E0B" size={14} />

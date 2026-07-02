@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FaShieldAlt, FaEye, FaEyeSlash } from "react-icons/fa";
+import axios from "axios";
 import "../styles/Login.css";
 
 function LoginPage() {
@@ -16,15 +17,6 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const validUsername = "admin";
-  const validPassword = "admin123";
-
-  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -34,7 +26,7 @@ function LoginPage() {
     }));
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!formData.username.trim() || !formData.password.trim()) {
@@ -43,30 +35,57 @@ function LoginPage() {
     }
 
     setLoading(true);
+    setError("");
 
-    setTimeout(() => {
-      if (
-        formData.username === validUsername &&
-        formData.password === validPassword
-      ) {
-        const loggedInUser = {
-          username: formData.username,
-          name: "Admin User",
-          role: "Security Admin",
-          email: "admin@company.com",
-        };
+    try {
+      const params = new URLSearchParams();
+      params.append("grant_type", "password");
+      params.append("username", formData.username);
+      params.append("password", formData.password);
+      params.append("scope", "");
+      params.append("client_id", "");
+      params.append("client_secret", "");
 
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("username", formData.username);
-        localStorage.setItem("loggedInUser", JSON.stringify(loggedInUser));
+      const response = await axios.post(
+        "http://127.0.0.1:8000/login",
+        params,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
 
-        setError("");
-        navigate("/dashboard");
-      } else {
-        setError("Invalid username or password.");
+      const { access_token, token_type } = response.data;
+
+      if (!access_token) {
+        setError("Login failed.");
         setLoading(false);
+        return;
       }
-    }, 800);
+
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("tokenType", token_type || "bearer");
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("username", formData.username);
+
+      const loggedInUser = {
+        username: formData.username,
+      };
+
+      localStorage.setItem("loggedInUser", JSON.stringify(loggedInUser));
+
+      setLoading(false);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      const backendMessage =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        "Login failed. Please try again.";
+
+      setError(backendMessage);
+      setLoading(false);
+    }
   };
 
   return (
