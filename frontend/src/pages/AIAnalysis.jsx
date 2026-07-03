@@ -96,37 +96,21 @@ function AIAnalysis() {
 
       try {
         const [predRes, behRes, clsRes] = await Promise.all([
-          api.get("/risk-predictions").catch((err) => {
-            console.error("risk-predictions error:", err?.response?.data || err);
-            return { data: [] };
-          }),
-          api.get("/behavior-analysis").catch((err) => {
-            console.error("behavior-analysis error:", err?.response?.data || err);
-            return { data: [] };
-          }),
-          api.get("/threat-classification").catch((err) => {
-            console.error("threat-classification error:", err?.response?.data || err);
-            return { data: [] };
-          }),
+          api.get("/risk-predictions").catch(() => ({ data: [] })),
+          api.get("/behavior-analysis").catch(() => ({ data: [] })),
+          api.get("/threat-classification").catch(() => ({ data: [] })),
         ]);
-
-        console.log("risk-predictions:", predRes.data);
-        console.log("behavior-analysis:", behRes.data);
-        console.log("threat-classification:", clsRes.data);
 
         setPredictions(
           Array.isArray(predRes.data) ? predRes.data : predRes.data?.predictions || []
         );
-
         setBehaviors(
           Array.isArray(behRes.data) ? behRes.data : behRes.data?.analysis || []
         );
-
         setClassifications(
           Array.isArray(clsRes.data) ? clsRes.data : clsRes.data?.classifications || []
         );
-      } catch (err) {
-        console.error("AI analysis API error:", err);
+      } catch {
         setError("Failed to load AI analysis data.");
       } finally {
         setLoading(false);

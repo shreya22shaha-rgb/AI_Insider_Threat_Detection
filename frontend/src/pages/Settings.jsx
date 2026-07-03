@@ -2,14 +2,21 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import "../styles/Dashboard.css";
+import { FaUserCircle, FaSignOutAlt, FaMoon } from "react-icons/fa";
 
 function Settings() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [theme, setTheme] = useState("Dark");
 
   useEffect(() => {
     const stored = localStorage.getItem("loggedInUser");
     if (stored) setCurrentUser(JSON.parse(stored));
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "/login";
+  };
 
   return (
     <>
@@ -22,7 +29,7 @@ function Settings() {
           <div>
             <h1 className="dashboard-title">Settings</h1>
             <p className="dashboard-subtitle">
-              Manage security preferences, alerts, authentication controls, and account protection
+              Manage account details, security preferences, alerts, and account protection
               settings.
             </p>
           </div>
@@ -40,6 +47,115 @@ function Settings() {
             gap: 20,
           }}
         >
+          {/* Profile */}
+          <div
+            style={{
+              background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
+              borderRadius: 16,
+              padding: 24,
+              border: "1px solid #334155",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
+              gridColumn: "1 / -1",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+              <FaUserCircle color="#38BDF8" size={20} />
+              <h3 style={{ color: "#F1F5F9", margin: 0 }}>Profile</h3>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 16,
+                marginBottom: 20,
+              }}
+            >
+              <div
+                style={{
+                  background: "#0F172A",
+                  border: "1px solid #1E293B",
+                  borderRadius: 10,
+                  padding: 12,
+                }}
+              >
+                <p style={{ color: "#64748B", fontSize: 11, margin: 0 }}>Username</p>
+                <p style={{ color: "#F1F5F9", fontSize: 14, fontWeight: 600, margin: "4px 0 0" }}>
+                  {currentUser?.username || "—"}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  background: "#0F172A",
+                  border: "1px solid #1E293B",
+                  borderRadius: 10,
+                  padding: 12,
+                }}
+              >
+                <p style={{ color: "#64748B", fontSize: 11, margin: 0 }}>Email</p>
+                <p style={{ color: "#F1F5F9", fontSize: 14, fontWeight: 600, margin: "4px 0 0" }}>
+                  {currentUser?.email || "—"}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  background: "#0F172A",
+                  border: "1px solid #1E293B",
+                  borderRadius: 10,
+                  padding: 12,
+                }}
+              >
+                <p style={{ color: "#64748B", fontSize: 11, margin: 0 }}>Role</p>
+                <p style={{ color: "#F59E0B", fontSize: 14, fontWeight: 600, margin: "4px 0 0" }}>
+                  {currentUser?.role || "—"}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  background: "#0F172A",
+                  border: "1px solid #1E293B",
+                  borderRadius: 10,
+                  padding: 12,
+                }}
+              >
+                <p style={{ color: "#64748B", fontSize: 11, margin: 0 }}>Theme</p>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginTop: 4,
+                  }}
+                >
+                  <FaMoon color="#A78BFA" size={12} />
+                  <span style={{ color: "#F1F5F9", fontSize: 14, fontWeight: 600 }}>{theme}</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              style={{
+                background: "#7F1D1D",
+                color: "#fff",
+                border: "none",
+                borderRadius: 10,
+                padding: "10px 18px",
+                cursor: "pointer",
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <FaSignOutAlt size={13} />
+              Logout
+            </button>
+          </div>
+
           {/* Authentication */}
           <div
             style={{
@@ -178,22 +294,10 @@ function Settings() {
                   padding: 12,
                 }}
               >
-                <p
-                  style={{
-                    color: "#F1F5F9",
-                    margin: 0,
-                    fontWeight: 600,
-                  }}
-                >
+                <p style={{ color: "#F1F5F9", margin: 0, fontWeight: 600 }}>
                   Windows 11 — Chrome
                 </p>
-                <p
-                  style={{
-                    color: "#64748B",
-                    margin: "4px 0 0",
-                    fontSize: 12,
-                  }}
-                >
+                <p style={{ color: "#64748B", margin: "4px 0 0", fontSize: 12 }}>
                   Mumbai, IN • Active now
                 </p>
               </div>
@@ -206,22 +310,10 @@ function Settings() {
                   padding: 12,
                 }}
               >
-                <p
-                  style={{
-                    color: "#F1F5F9",
-                    margin: 0,
-                    fontWeight: 600,
-                  }}
-                >
+                <p style={{ color: "#F1F5F9", margin: 0, fontWeight: 600 }}>
                   MacOS — Safari
                 </p>
-                <p
-                  style={{
-                    color: "#64748B",
-                    margin: "4px 0 0",
-                    fontSize: 12,
-                  }}
-                >
+                <p style={{ color: "#64748B", margin: "4px 0 0", fontSize: 12 }}>
                   Pune, IN • 2 hours ago
                 </p>
               </div>

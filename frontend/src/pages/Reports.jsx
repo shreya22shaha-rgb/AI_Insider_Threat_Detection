@@ -22,6 +22,7 @@ import {
 import { FaChartLine, FaChartPie, FaChartBar } from "react-icons/fa";
 
 const COLORS = ["#EF4444", "#F97316", "#F59E0B", "#10B981", "#38BDF8", "#A78BFA"];
+const DEFAULT_ACTIVITY_DATE = "2026-06-22";
 
 function StatMini({ title, value, color }) {
   return (
@@ -67,7 +68,7 @@ function ChartCard({ title, subtitle, icon, children }) {
         <h3 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>{title}</h3>
       </div>
       <p style={{ color: "#64748B", fontSize: 12, margin: "0 0 16px" }}>{subtitle}</p>
-      {children}
+      <div style={{ minHeight: 300, width: "100%" }}>{children}</div>
     </div>
   );
 }
@@ -98,7 +99,7 @@ function Reports() {
   const [riskTrend, setRiskTrend] = useState([]);
   const [threatClassification, setThreatClassification] = useState([]);
   const [activitiesByDate, setActivitiesByDate] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [selectedDate, setSelectedDate] = useState(DEFAULT_ACTIVITY_DATE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
@@ -113,35 +114,18 @@ function Reports() {
     setError("");
 
     Promise.all([
-      api.get("/risk-trend").catch((err) => {
-        console.error("risk-trend error:", err?.response?.data || err);
-        return { data: [] };
-      }),
-      api.get("/threat-classification").catch((err) => {
-        console.error("threat-classification error:", err?.response?.data || err);
-        return { data: [] };
-      }),
+      api.get("/risk-trend").catch(() => ({ data: [] })),
+      api.get("/threat-classification").catch(() => ({ data: [] })),
       api
-        .get("/activities-by-date", {
-          params: { selected_date: selectedDate },
-        })
-        .catch((err) => {
-          console.error("activities-by-date error:", err?.response?.data || err);
-          return { data: [] };
-        }),
+        .get("/activities-by-date", { params: { selected_date: selectedDate } })
+        .catch(() => ({ data: [] })),
     ])
       .then(([trendRes, classRes, activityRes]) => {
-        console.log("selectedDate:", selectedDate);
-        console.log("risk-trend:", trendRes.data);
-        console.log("threat-classification:", classRes.data);
-        console.log("activities-by-date:", activityRes.data);
-
         setRiskTrend(Array.isArray(trendRes.data) ? trendRes.data : []);
         setThreatClassification(Array.isArray(classRes.data) ? classRes.data : []);
         setActivitiesByDate(Array.isArray(activityRes.data) ? activityRes.data : []);
       })
-      .catch((err) => {
-        console.error("Reports API error:", err);
+      .catch(() => {
         setError("Failed to load reports data.");
       })
       .finally(() => setLoading(false));
@@ -152,25 +136,29 @@ function Reports() {
       name: item.employee_name || `User ${idx + 1}`,
       score: Number(item.current_score ?? 0),
       previous: Number(item.previous_score ?? 0),
-      trend: item.trend || "Unknown",
     }));
   }, [riskTrend]);
 
-  // Use actual threat_classification from backend
   const pieData = useMemo(() => {
     return threatClassification.map((item, idx) => ({
       name: item.threat_classification || item.threat_type || `Threat ${idx + 1}`,
-      value: 1, // each record counts as one threat instance
+      value: 1,
     }));
   }, [threatClassification]);
 
   const activityBarData = useMemo(() => {
-    return activitiesByDate
-      .map((item, idx) => ({
-        date: item.date || item.activity_date || item.label || `Group ${idx + 1}`,
-        count: Number(item.count ?? item.total ?? item.activities ?? item.value ?? 0),
-      }))
-      .filter((item) => item.count > 0);
+    if (!Array.isArray(activitiesByDate) || activitiesByDate.length === 0) return [];
+
+    const grouped = activitiesByDate.reduce((acc, item) => {
+      const key = item.activity_type || "Unknown";
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(grouped).map(([activity, count]) => ({
+      date: activity,
+      count,
+    }));
   }, [activitiesByDate]);
 
   const totalTrend = trendChartData.length;
@@ -181,7 +169,6 @@ function Reports() {
   return (
     <>
       <Sidebar />
-
       <div className="dashboard-content">
         <Navbar user={currentUser} />
 
@@ -193,16 +180,16 @@ function Reports() {
             </p>
           </div>
 
-        <div className="dashboard-live-badge">
-          <span className="live-dot"></span>
-          REPORT CENTER
-        </div>
+          <div className="dashboard-live-badge">
+            <span className="live-dot"></span>
+            REPORT CENTER
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
           <StatMini title="Trend Points" value={totalTrend} color="#38BDF8" />
           <StatMini title="Threat Types" value={totalThreatTypes} color="#F97316" />
-          <StatMini title="Date Groups" value={totalDates} color="#10B981" />
+          <StatMini title="Activity Types" value={totalDates} color="#10B981" />
         </div>
 
         <div
@@ -214,10 +201,7 @@ function Reports() {
             flexWrap: "wrap",
           }}
         >
-          <label
-            htmlFor="report-date"
-            style={{ color: "#94A3B8", fontSize: 13, fontWeight: 600 }}
-          >
+          <label htmlFor="report-date" style={{ color: "#94A3B8", fontSize: 13, fontWeight: 600 }}>
             Select Date:
           </label>
 
@@ -225,10 +209,7 @@ function Reports() {
             id="report-date"
             type="date"
             value={selectedDate}
-            onChange={(e) => {
-              console.log("New selected date:", e.target.value);
-              setSelectedDate(e.target.value);
-            }}
+            onChange={(e) => setSelectedDate(e.target.value)}
             style={{
               background: "#0F172A",
               border: "1px solid #334155",
@@ -239,7 +220,9 @@ function Reports() {
             }}
           />
 
-          <span style={{ color: "#64748B", fontSize: 12 }}>Current: {selectedDate}</span>
+          <span style={{ color: "#64748B", fontSize: 12 }}>
+            Default test date: {DEFAULT_ACTIVITY_DATE}
+          </span>
         </div>
 
         {loading ? (
@@ -260,7 +243,6 @@ function Reports() {
           </div>
         ) : (
           <>
-            {/* Risk Trend */}
             <div style={{ marginBottom: 20 }}>
               <ChartCard
                 title="Risk Trend Analysis"
@@ -271,13 +253,7 @@ function Reports() {
                   <EmptyChartState message="No risk trend data available." height={320} />
                 ) : (
                   <div style={{ width: "100%", height: 320, minWidth: 0, minHeight: 320 }}>
-                    <ResponsiveContainer
-                      width="100%"
-                      height="100%"
-                      minWidth={0}
-                      minHeight={320}
-                      initialDimension={{ width: 1, height: 1 }}
-                    >
+                    <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={trendChartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
                         <XAxis dataKey="name" stroke="#64748B" tick={{ fontSize: 11 }} />
@@ -313,9 +289,7 @@ function Reports() {
               </ChartCard>
             </div>
 
-            {/* Donut + Bar charts */}
             <div className="reports-grid">
-              {/* Donut Threat Classification */}
               <ChartCard
                 title="Threat Classification"
                 subtitle="AI-detected threat categories across employees"
@@ -325,13 +299,7 @@ function Reports() {
                   <EmptyChartState message="No threat classification data available." height={300} />
                 ) : (
                   <div style={{ width: "100%", height: 300, minWidth: 0, minHeight: 300 }}>
-                    <ResponsiveContainer
-                      width="100%"
-                      height="100%"
-                      minWidth={0}
-                      minHeight={300}
-                      initialDimension={{ width: 1, height: 1 }}
-                    >
+                    <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={pieData}
@@ -343,17 +311,16 @@ function Reports() {
                           outerRadius={110}
                           paddingAngle={4}
                           cornerRadius={4}
+                          isAnimationActive={false}
                         >
                           {pieData.map((entry, index) => (
-                            <Cell
-                              key={index}
-                              fill={COLORS[index % COLORS.length]}
-                            />
+                            <Cell key={index} fill={COLORS[index % COLORS.length]} />
                           ))}
 
                           <Label
                             position="center"
                             content={({ viewBox }) => {
+                              if (!viewBox || viewBox.cx == null || viewBox.cy == null) return null;
                               const { cx, cy } = viewBox;
                               return (
                                 <g>
@@ -390,43 +357,30 @@ function Reports() {
                             color: "#F1F5F9",
                           }}
                         />
-                        <Legend
-                          iconType="circle"
-                          wrapperStyle={{
-                            fontSize: 11,
-                            color: "#9CA3AF",
-                          }}
-                        />
+                        <Legend iconType="circle" wrapperStyle={{ fontSize: 11, color: "#9CA3AF" }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 )}
               </ChartCard>
 
-              {/* Activities by Date */}
               <ChartCard
                 title="Activities by Date"
-                subtitle="Activity volume for selected date"
+                subtitle={`Activity volume for ${selectedDate}`}
                 icon={<FaChartBar color="#10B981" size={15} />}
               >
                 {activityBarData.length === 0 ? (
                   <EmptyChartState
-                    message="No activity-by-date data available for selected date."
+                    message={`No activity-by-date data available for ${selectedDate}. Try 2026-06-22, 2026-06-12, or 2026-06-06.`}
                     height={300}
                   />
                 ) : (
                   <div style={{ width: "100%", height: 300, minWidth: 0, minHeight: 300 }}>
-                    <ResponsiveContainer
-                      width="100%"
-                      height="100%"
-                      minWidth={0}
-                      minHeight={300}
-                      initialDimension={{ width: 1, height: 1 }}
-                    >
+                    <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={activityBarData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
                         <XAxis dataKey="date" stroke="#64748B" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#64748B" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#64748B" tick={{ fontSize: 11 }} allowDecimals={false} />
                         <Tooltip
                           contentStyle={{
                             background: "#0F172A",

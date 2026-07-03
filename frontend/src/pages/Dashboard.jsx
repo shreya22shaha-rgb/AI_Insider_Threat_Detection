@@ -30,8 +30,7 @@ function Dashboard() {
       .then((response) => {
         setDashboardData(response.data || {});
       })
-      .catch((error) => {
-        console.error("Dashboard API error:", error);
+      .catch(() => {
         setError("Failed to load dashboard data.");
       })
       .finally(() => {
@@ -40,30 +39,23 @@ function Dashboard() {
   }, []);
 
   const totalActivities =
-    dashboardData?.total_activities ??
-    dashboardData?.totalActivities ??
-    0;
+    dashboardData?.total_activities ?? dashboardData?.totalActivities ?? 0;
 
-  const highRisk =
-    dashboardData?.high_risk ??
-    dashboardData?.highRisk ??
-    0;
+  const highRisk = dashboardData?.high_risk ?? dashboardData?.highRisk ?? 0;
 
   const mediumRisk =
-    dashboardData?.medium_risk ??
-    dashboardData?.mediumRisk ??
-    0;
+    dashboardData?.medium_risk ?? dashboardData?.mediumRisk ?? 0;
 
-  const lowRisk =
-    dashboardData?.low_risk ??
-    dashboardData?.lowRisk ??
-    0;
+  const lowRisk = dashboardData?.low_risk ?? dashboardData?.lowRisk ?? 0;
 
+  // Trend values are hardcoded (per Version 1 integration decision).
+  // Kept for visual indicator purposes only — not tied to backend.
   const stats = [
     {
       title: "Total Activities",
       value: totalActivities,
       trend: "+12%",
+      trendType: "positive",
       icon: <FaUsers />,
       accent: "blue",
     },
@@ -71,6 +63,7 @@ function Dashboard() {
       title: "High Risk",
       value: highRisk,
       trend: "+4%",
+      trendType: "negative",
       icon: <FaExclamationTriangle />,
       accent: "red",
     },
@@ -78,6 +71,7 @@ function Dashboard() {
       title: "Medium Risk",
       value: mediumRisk,
       trend: "+2.1%",
+      trendType: "negative",
       icon: <FaShieldAlt />,
       accent: "green",
     },
@@ -85,6 +79,7 @@ function Dashboard() {
       title: "Low Risk",
       value: lowRisk,
       trend: "+1.8%",
+      trendType: "positive",
       icon: <FaChartLine />,
       accent: "cyan",
     },
@@ -134,7 +129,7 @@ function Dashboard() {
               value={loading ? "..." : item.value}
               icon={item.icon}
               trend={item.trend}
-              trendType="positive"
+              trendType={item.trendType}
               accent={item.accent}
             />
           ))}

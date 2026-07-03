@@ -76,19 +76,13 @@ function SecuritySummary() {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
+    setError("");
+
     Promise.all([
-      api.get("/security-summary").catch((err) => {
-        console.error("security-summary error:", err?.response?.data || err);
-        return { data: null };
-      }),
-      api.get("/insider-threat-rules").catch((err) => {
-        console.error("insider-threat-rules error:", err?.response?.data || err);
-        return { data: [] };
-      }),
-      api.get("/failed-login-alerts").catch((err) => {
-        console.error("failed-login-alerts error:", err?.response?.data || err);
-        return { data: [] };
-      }),
+      api.get("/security-summary").catch(() => ({ data: null })),
+      api.get("/insider-threat-rules").catch(() => ({ data: [] })),
+      api.get("/failed-login-alerts").catch(() => ({ data: [] })),
     ])
       .then(([summaryRes, rulesRes, failedRes]) => {
         setSummary(summaryRes.data || {});
@@ -97,8 +91,7 @@ function SecuritySummary() {
           Array.isArray(failedRes.data) ? failedRes.data : failedRes.data?.alerts || []
         );
       })
-      .catch((error) => {
-        console.error("Security summary error:", error);
+      .catch(() => {
         setError("Failed to load security summary.");
       })
       .finally(() => setLoading(false));
@@ -150,7 +143,6 @@ function SecuritySummary() {
           </div>
         ) : (
           <>
-            {/* Stats */}
             <div
               style={{
                 display: "grid",
@@ -197,15 +189,13 @@ function SecuritySummary() {
               />
             </div>
 
-            {/* Bottom Grid */}
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
                 gap: 16,
               }}
             >
-              {/* Rules */}
               <div
                 style={{
                   background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
@@ -269,7 +259,6 @@ function SecuritySummary() {
                 )}
               </div>
 
-              {/* Failed Login Alerts */}
               <div
                 style={{
                   background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
@@ -316,7 +305,17 @@ function SecuritySummary() {
                             margin: 0,
                           }}
                         >
-                          {item.employee_name || item.user || `Login Alert ${idx + 1}`}
+                          {item.username || item.employee_name || item.user || `Login Alert ${idx + 1}`}
+                        </p>
+                        <p
+                          style={{
+                            color: "#A78BFA",
+                            fontSize: 12,
+                            margin: "4px 0 0",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Failed Attempts: {item.failed_attempts ?? 0}
                         </p>
                         <p
                           style={{
@@ -325,9 +324,7 @@ function SecuritySummary() {
                             margin: "4px 0 0",
                           }}
                         >
-                          {item.timestamp
-                            ? new Date(item.timestamp).toLocaleString()
-                            : "Recent failed login attempt"}
+                          {item.alert || "Recent failed login attempt"}
                         </p>
                       </div>
                     ))}
