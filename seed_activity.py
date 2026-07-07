@@ -5,56 +5,35 @@ from datetime import datetime
 db = SessionLocal()
 
 activities = [
-    {
-        "employee_name": "Parth",
-        "activity_type": "USB File Transfer",
-        "risk_level": "High"
-    },
-    {
-        "employee_name": "Shreya",
-        "activity_type": "Multiple Failed Logins",
-        "risk_level": "Medium"
-    },
-    {
-        "employee_name": "Shailesh",
-        "activity_type": "Database Access",
-        "risk_level": "High"
-    },
-    {
-        "employee_name": "Rahul",
-        "activity_type": "Normal Login",
-        "risk_level": "Low"
-    },
-    {
-        "employee_name": "Priya",
-        "activity_type": "Email Download",
-        "risk_level": "Medium"
-    },
-    {
-        "employee_name": "Amit",
-        "activity_type": "Privilege Escalation",
-        "risk_level": "Critical"
-    },
-    {
-        "employee_name": "Sneha",
-        "activity_type": "Login from New Device",
-        "risk_level": "Medium"
-    },
-    {
-        "employee_name": "Neha",
-        "activity_type": "File Upload",
-        "risk_level": "Low"
-    },
-    {
-        "employee_name": "Rohit",
-        "activity_type": "VPN Login",
-        "risk_level": "Low"
-    },
-    {
-        "employee_name": "Anjali",
-        "activity_type": "Suspicious Script Execution",
-        "risk_level": "High"
-    }
+
+    # Rahul -> USB File Transfer (5)
+    {"employee_name": "Rahul", "activity_type": "USB File Transfer", "risk_level": "High"},
+    {"employee_name": "Rahul", "activity_type": "USB File Transfer", "risk_level": "High"},
+    {"employee_name": "Rahul", "activity_type": "USB File Transfer", "risk_level": "High"},
+    {"employee_name": "Rahul", "activity_type": "USB File Transfer", "risk_level": "High"},
+    {"employee_name": "Rahul", "activity_type": "USB File Transfer", "risk_level": "High"},
+
+    # Amit -> File Download (7)
+    {"employee_name": "Amit", "activity_type": "File Download", "risk_level": "Medium"},
+    {"employee_name": "Amit", "activity_type": "File Download", "risk_level": "Medium"},
+    {"employee_name": "Amit", "activity_type": "File Download", "risk_level": "Medium"},
+    {"employee_name": "Amit", "activity_type": "File Download", "risk_level": "Medium"},
+    {"employee_name": "Amit", "activity_type": "File Download", "risk_level": "Medium"},
+    {"employee_name": "Amit", "activity_type": "File Download", "risk_level": "Medium"},
+    {"employee_name": "Amit", "activity_type": "File Download", "risk_level": "Medium"},
+
+    # Sneha -> Admin Privilege Change (2)
+    {"employee_name": "Sneha", "activity_type": "Admin Privilege Change", "risk_level": "High"},
+    {"employee_name": "Sneha", "activity_type": "Admin Privilege Change", "risk_level": "High"},
+
+    # Additional normal activities
+    {"employee_name": "Parth", "activity_type": "System Login", "risk_level": "Low"},
+    {"employee_name": "Shreya", "activity_type": "Multiple Failed Logins", "risk_level": "Medium"},
+    {"employee_name": "Shailesh", "activity_type": "Database Access", "risk_level": "High"},
+    {"employee_name": "Priya", "activity_type": "Email Access", "risk_level": "Low"},
+    {"employee_name": "Neha", "activity_type": "File Upload", "risk_level": "Low"},
+    {"employee_name": "Rohit", "activity_type": "VPN Login", "risk_level": "Low"},
+    {"employee_name": "Anjali", "activity_type": "Suspicious Script Execution", "risk_level": "High"},
 ]
 
 for activity in activities:
