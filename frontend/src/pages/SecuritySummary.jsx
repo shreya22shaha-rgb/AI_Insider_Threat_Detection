@@ -17,11 +17,12 @@ function StatCard({ title, value, icon, color }) {
   return (
     <div
       style={{
-        background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
+        background:
+          "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)",
         borderRadius: 16,
         padding: 20,
-        border: "1px solid #334155",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
+        border: "1px solid var(--border-color)",
+        boxShadow: "var(--shadow-card)",
       }}
     >
       <div
@@ -47,10 +48,10 @@ function StatCard({ title, value, icon, color }) {
           {icon}
         </div>
       </div>
-      <p style={{ color: "#64748B", fontSize: 12, margin: 0 }}>{title}</p>
+      <p style={{ color: "var(--text-faint)", fontSize: 12, margin: 0 }}>{title}</p>
       <h2
         style={{
-          color: "#F1F5F9",
+          color: "var(--text-primary)",
           fontSize: 28,
           margin: "8px 0 0",
           fontWeight: 700,
@@ -62,7 +63,7 @@ function StatCard({ title, value, icon, color }) {
   );
 }
 
-function SecuritySummary() {
+function SecuritySummary({ theme, toggleTheme }) {
   const [summary, setSummary] = useState(null);
   const [rules, setRules] = useState([]);
   const [failedLogins, setFailedLogins] = useState([]);
@@ -108,7 +109,7 @@ function SecuritySummary() {
     <>
       <Sidebar />
       <div className="dashboard-content">
-        <Navbar user={currentUser} />
+        <Navbar user={currentUser} theme={theme} toggleTheme={toggleTheme} />
 
         <div className="dashboard-header">
           <div>
@@ -126,15 +127,15 @@ function SecuritySummary() {
         </div>
 
         {loading ? (
-          <div style={{ color: "#64748B", textAlign: "center", padding: "40px 0" }}>
+          <div style={{ color: "var(--text-faint)", textAlign: "center", padding: "40px 0" }}>
             Loading security summary...
           </div>
         ) : error ? (
           <div
             style={{
-              color: "#FCA5A5",
-              background: "#111827",
-              border: "1px solid #7f1d1d",
+              color: "var(--danger-text)",
+              background: "var(--bg-surface)",
+              border: "1px solid var(--danger-text)",
               borderRadius: 10,
               padding: 14,
             }}
@@ -198,10 +199,11 @@ function SecuritySummary() {
             >
               <div
                 style={{
-                  background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
+                  background:
+                    "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)",
                   borderRadius: 16,
                   padding: 20,
-                  border: "1px solid #334155",
+                  border: "1px solid var(--border-color)",
                 }}
               >
                 <div
@@ -212,14 +214,14 @@ function SecuritySummary() {
                     marginBottom: 14,
                   }}
                 >
-                  <FaGavel color="#10B981" />
-                  <h3 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>
+                  <FaGavel color="var(--accent-green)" />
+                  <h3 style={{ color: "var(--text-primary)", fontSize: 16, margin: 0 }}>
                     Insider Threat Rules
                   </h3>
                 </div>
 
                 {rules.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                  <p style={{ color: "var(--text-faint)", fontSize: 13, margin: 0 }}>
                     No active rules found.
                   </p>
                 ) : (
@@ -228,30 +230,30 @@ function SecuritySummary() {
                       <div
                         key={idx}
                         style={{
-                          background: "#0F172A",
-                          border: "1px solid #1E293B",
+                          background: "var(--bg-surface-2)",
+                          border: "1px solid var(--border-soft)",
                           borderRadius: 10,
                           padding: 12,
                         }}
                       >
                         <p
                           style={{
-                            color: "#F1F5F9",
+                            color: "var(--text-primary)",
                             fontSize: 13,
                             fontWeight: 600,
                             margin: 0,
                           }}
                         >
-                          {rule.rule_name || rule.name || `Rule ${idx + 1}`}
+                          {rule.employee_name || `Rule ${idx + 1}`}
                         </p>
                         <p
                           style={{
-                            color: "#64748B",
+                            color: "var(--text-faint)",
                             fontSize: 12,
                             margin: "4px 0 0",
                           }}
                         >
-                          {rule.description || "Threat detection rule active"}
+                          {rule.rule_triggered || "Threat detection rule active"}
                         </p>
                       </div>
                     ))}
@@ -261,10 +263,11 @@ function SecuritySummary() {
 
               <div
                 style={{
-                  background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
+                  background:
+                    "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)",
                   borderRadius: 16,
                   padding: 20,
-                  border: "1px solid #334155",
+                  border: "1px solid var(--border-color)",
                 }}
               >
                 <div
@@ -275,14 +278,14 @@ function SecuritySummary() {
                     marginBottom: 14,
                   }}
                 >
-                  <FaLock color="#A78BFA" />
-                  <h3 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>
+                  <FaLock color="var(--accent-purple)" />
+                  <h3 style={{ color: "var(--text-primary)", fontSize: 16, margin: 0 }}>
                     Failed Login Alerts
                   </h3>
                 </div>
 
                 {failedLogins.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                  <p style={{ color: "var(--text-faint)", fontSize: 13, margin: 0 }}>
                     No failed login alerts found.
                   </p>
                 ) : (
@@ -291,15 +294,15 @@ function SecuritySummary() {
                       <div
                         key={idx}
                         style={{
-                          background: "#0F172A",
-                          border: "1px solid #1E293B",
+                          background: "var(--bg-surface-2)",
+                          border: "1px solid var(--border-soft)",
                           borderRadius: 10,
                           padding: 12,
                         }}
                       >
                         <p
                           style={{
-                            color: "#F1F5F9",
+                            color: "var(--text-primary)",
                             fontSize: 13,
                             fontWeight: 600,
                             margin: 0,
@@ -309,7 +312,7 @@ function SecuritySummary() {
                         </p>
                         <p
                           style={{
-                            color: "#A78BFA",
+                            color: "var(--accent-purple)",
                             fontSize: 12,
                             margin: "4px 0 0",
                             fontWeight: 600,
@@ -319,7 +322,7 @@ function SecuritySummary() {
                         </p>
                         <p
                           style={{
-                            color: "#64748B",
+                            color: "var(--text-faint)",
                             fontSize: 12,
                             margin: "4px 0 0",
                           }}

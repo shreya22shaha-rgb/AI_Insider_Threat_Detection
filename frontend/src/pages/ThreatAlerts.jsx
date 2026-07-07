@@ -16,25 +16,72 @@ function getSeverityStyle(severity) {
     case "low":
       return { color: "#10B981", bg: "#10B98120", label: "Low" };
     default:
-      return { color: "#94A3B8", bg: "#94A3B820", label: severity || "Unknown" };
+      return {
+        color: "var(--text-muted)",
+        bg: "color-mix(in srgb, var(--text-muted) 12%, transparent)",
+        label: severity || "Unknown",
+      };
   }
+}
+
+function getDisplayAlertMessage(alertItem) {
+  const severity = alertItem?.risk_level?.toLowerCase() || "";
+  const activityType = alertItem?.activity_type || "Threat Activity";
+  const backendMessage = (alertItem?.alert || "").trim();
+  const messageLower = backendMessage.toLowerCase();
+
+  const invalidNormalMessage =
+    !backendMessage ||
+    messageLower === "normal activity" ||
+    messageLower === "normal" ||
+    messageLower === "safe";
+
+  if (severity === "critical") {
+    if (invalidNormalMessage) {
+      return `Critical ${activityType} Detected`;
+    }
+    return backendMessage;
+  }
+
+  if (severity === "high") {
+    if (invalidNormalMessage) {
+      return `${activityType} Attempt Detected`;
+    }
+    return backendMessage;
+  }
+
+  if (severity === "medium") {
+    if (!backendMessage) {
+      return `${activityType} Requires Review`;
+    }
+    return backendMessage;
+  }
+
+  if (severity === "low") {
+    return backendMessage || `${activityType} Logged`;
+  }
+
+  return backendMessage || `${activityType} Alert`;
 }
 
 function getAlertStyle(alertText) {
   const key = alertText?.toLowerCase() || "";
-  if (key.includes("suspicious")) {
+  if (key.includes("critical") || key.includes("detected") || key.includes("attempt")) {
     return { color: "#EF4444", bg: "#EF444420" };
   }
-  if (key.includes("review")) {
+  if (key.includes("review") || key.includes("warning")) {
     return { color: "#F59E0B", bg: "#F59E0B20" };
   }
   if (key.includes("normal")) {
     return { color: "#10B981", bg: "#10B98120" };
   }
-  return { color: "#94A3B8", bg: "#94A3B820" };
+  return {
+    color: "var(--text-muted)",
+    bg: "color-mix(in srgb, var(--text-muted) 12%, transparent)",
+  };
 }
 
-function ThreatAlerts() {
+function ThreatAlerts({ theme, toggleTheme }) {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -67,6 +114,7 @@ function ThreatAlerts() {
     return alerts.map((a, idx) => ({
       ...a,
       alert_id: `ALT-${1001 + idx}`,
+      display_message: getDisplayAlertMessage(a),
     }));
   }, [alerts]);
 
@@ -75,12 +123,14 @@ function ThreatAlerts() {
       const matchFilter =
         filter === "All" || alert.risk_level?.toLowerCase() === filter.toLowerCase();
 
+      const query = search.toLowerCase();
+
       const matchSearch =
         !search ||
-        alert.alert_id.toLowerCase().includes(search.toLowerCase()) ||
-        (alert.activity_type || "").toLowerCase().includes(search.toLowerCase()) ||
-        (alert.employee_name || "").toLowerCase().includes(search.toLowerCase()) ||
-        (alert.alert || "").toLowerCase().includes(search.toLowerCase());
+        alert.alert_id.toLowerCase().includes(query) ||
+        (alert.activity_type || "").toLowerCase().includes(query) ||
+        (alert.employee_name || "").toLowerCase().includes(query) ||
+        (alert.display_message || "").toLowerCase().includes(query);
 
       return matchFilter && matchSearch;
     });
@@ -91,7 +141,7 @@ function ThreatAlerts() {
     (a) => a.risk_level?.toLowerCase() === "critical"
   ).length;
   const suspiciousCount = alertsWithId.filter((a) =>
-    a.alert?.toLowerCase().includes("suspicious")
+    a.display_message?.toLowerCase().includes("detected")
   ).length;
 
   const severityCounts = {
@@ -105,7 +155,7 @@ function ThreatAlerts() {
     <>
       <Sidebar />
       <div className="dashboard-content">
-        <Navbar user={currentUser} />
+        <Navbar user={currentUser} theme={theme} toggleTheme={toggleTheme} />
 
         <div className="dashboard-header">
           <div>
@@ -122,10 +172,12 @@ function ThreatAlerts() {
 
         <div
           style={{
-            background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)",
-            border: "1px solid #334155",
+            background:
+              "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)",
+            border: "1px solid var(--border-color)",
             borderRadius: 16,
             padding: 24,
+            boxShadow: "var(--shadow-card)",
           }}
         >
           <div
@@ -140,38 +192,45 @@ function ThreatAlerts() {
           >
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <FaBell color="#F97316" size={16} />
-                <h2 style={{ color: "#F1F5F9", fontSize: 16, fontWeight: 600, margin: 0 }}>
+                <FaBell color="var(--accent-orange)" size={16} />
+                <h2
+                  style={{
+                    color: "var(--text-primary)",
+                    fontSize: 16,
+                    fontWeight: 600,
+                    margin: 0,
+                  }}
+                >
                   Recent Security Alerts
                 </h2>
                 <span
                   style={{
-                    background: "#F9731620",
-                    color: "#F97316",
+                    background: "rgba(249, 115, 22, 0.12)",
+                    color: "var(--accent-orange)",
                     fontSize: 11,
                     fontWeight: 700,
                     padding: "2px 10px",
                     borderRadius: 999,
                   }}
                 >
-                  {suspiciousCount} Suspicious
+                  {suspiciousCount} Detected
                 </span>
               </div>
-              <p style={{ color: "#64748B", fontSize: 12, marginTop: 4 }}>
+              <p style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 4 }}>
                 Latest insider threat alerts and SOC events
               </p>
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
               {[
-                { label: "TOTAL ALERTS", value: totalAlerts, color: "#F97316" },
-                { label: "CRITICAL", value: criticalCount, color: "#EF4444" },
+                { label: "TOTAL ALERTS", value: totalAlerts, color: "var(--accent-orange)" },
+                { label: "CRITICAL", value: criticalCount, color: "var(--accent-red)" },
               ].map((stat) => (
                 <div
                   key={stat.label}
                   style={{
-                    background: "#0F172A",
-                    border: "1px solid #334155",
+                    background: "var(--bg-surface-2)",
+                    border: "1px solid var(--border-color)",
                     borderRadius: 10,
                     padding: "8px 16px",
                     textAlign: "center",
@@ -183,7 +242,7 @@ function ThreatAlerts() {
                   </div>
                   <div
                     style={{
-                      color: "#64748B",
+                      color: "var(--text-faint)",
                       fontSize: 9,
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
@@ -201,14 +260,14 @@ function ThreatAlerts() {
               display: "flex",
               alignItems: "center",
               gap: 10,
-              background: "#0F172A",
-              border: "1px solid #334155",
+              background: "var(--bg-surface-2)",
+              border: "1px solid var(--border-color)",
               borderRadius: 10,
               padding: "10px 16px",
               marginBottom: 16,
             }}
           >
-            <FaSearch color="#64748B" size={13} />
+            <FaSearch color="var(--text-faint)" size={13} />
             <input
               type="text"
               placeholder="Search by alert ID, type, user or message..."
@@ -218,7 +277,7 @@ function ThreatAlerts() {
                 background: "transparent",
                 border: "none",
                 outline: "none",
-                color: "#F1F5F9",
+                color: "var(--text-primary)",
                 fontSize: 13,
                 width: "100%",
               }}
@@ -231,9 +290,14 @@ function ThreatAlerts() {
                 key={f}
                 onClick={() => setFilter(f)}
                 style={{
-                  background: filter === f ? "#3B82F620" : "#0F172A",
-                  border: `1px solid ${filter === f ? "#3B82F6" : "#334155"}`,
-                  color: filter === f ? "#3B82F6" : "#64748B",
+                  background:
+                    filter === f
+                      ? "color-mix(in srgb, var(--accent-blue) 12%, transparent)"
+                      : "var(--bg-surface-2)",
+                  border: `1px solid ${
+                    filter === f ? "var(--accent-blue)" : "var(--border-color)"
+                  }`,
+                  color: filter === f ? "var(--accent-blue)" : "var(--text-faint)",
                   borderRadius: 999,
                   padding: "5px 14px",
                   fontSize: 12,
@@ -247,17 +311,17 @@ function ThreatAlerts() {
           </div>
 
           {loading ? (
-            <div style={{ color: "#64748B", padding: "32px 0", textAlign: "center" }}>
+            <div style={{ color: "var(--text-faint)", padding: "32px 0", textAlign: "center" }}>
               Loading alerts...
             </div>
           ) : error ? (
             <div
               style={{
-                color: "#FCA5A5",
+                color: "var(--danger-text)",
                 padding: "12px 16px",
-                background: "#1f2937",
+                background: "var(--bg-surface)",
                 borderRadius: 10,
-                border: "1px solid #7f1d1d",
+                border: "1px solid var(--danger-text)",
               }}
             >
               {error}
@@ -267,25 +331,23 @@ function ThreatAlerts() {
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ borderBottom: "1px solid #1E293B" }}>
-                      {["ALERT ID", "TYPE", "USER", "SEVERITY", "MESSAGE", "ACTION"].map(
-                        (col) => (
-                          <th
-                            key={col}
-                            style={{
-                              color: "#475569",
-                              fontSize: 11,
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.05em",
-                              padding: "10px 12px",
-                              textAlign: "left",
-                            }}
-                          >
-                            {col}
-                          </th>
-                        )
-                      )}
+                    <tr style={{ borderBottom: "1px solid var(--border-soft)" }}>
+                      {["ALERT ID", "TYPE", "USER", "SEVERITY", "MESSAGE", "ACTION"].map((col) => (
+                        <th
+                          key={col}
+                          style={{
+                            color: "var(--text-secondary)",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                            padding: "10px 12px",
+                            textAlign: "left",
+                          }}
+                        >
+                          {col}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -294,7 +356,7 @@ function ThreatAlerts() {
                         <td
                           colSpan={6}
                           style={{
-                            color: "#64748B",
+                            color: "var(--text-faint)",
                             textAlign: "center",
                             padding: "32px 0",
                             fontSize: 14,
@@ -306,19 +368,23 @@ function ThreatAlerts() {
                     ) : (
                       filtered.map((alert) => {
                         const sev = getSeverityStyle(alert.risk_level);
-                        const msgStyle = getAlertStyle(alert.alert);
+                        const msgStyle = getAlertStyle(alert.display_message);
 
                         return (
                           <tr
                             key={alert.alert_id}
-                            style={{ borderBottom: "1px solid #1E293B" }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = "#1E293B")}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                            style={{ borderBottom: "1px solid var(--border-soft)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "var(--bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
                           >
                             <td
                               style={{
                                 padding: "14px 12px",
-                                color: "#38BDF8",
+                                color: "var(--accent-cyan)",
                                 fontSize: 13,
                                 fontWeight: 600,
                               }}
@@ -327,7 +393,13 @@ function ThreatAlerts() {
                             </td>
 
                             <td style={{ padding: "14px 12px" }}>
-                              <div style={{ color: "#F1F5F9", fontSize: 13, fontWeight: 500 }}>
+                              <div
+                                style={{
+                                  color: "var(--text-primary)",
+                                  fontSize: 13,
+                                  fontWeight: 500,
+                                }}
+                              >
                                 {alert.activity_type || "Unknown"}
                               </div>
                             </td>
@@ -335,7 +407,7 @@ function ThreatAlerts() {
                             <td
                               style={{
                                 padding: "14px 12px",
-                                color: "#94A3B8",
+                                color: "var(--text-muted)",
                                 fontSize: 13,
                               }}
                             >
@@ -351,6 +423,7 @@ function ThreatAlerts() {
                                   padding: "4px 12px",
                                   fontSize: 12,
                                   fontWeight: 700,
+                                  border: `1px solid ${sev.color}33`,
                                 }}
                               >
                                 {sev.label}
@@ -366,9 +439,11 @@ function ThreatAlerts() {
                                   padding: "4px 12px",
                                   fontSize: 12,
                                   fontWeight: 700,
+                                  border: `1px solid ${msgStyle.color}33`,
+                                  display: "inline-block",
                                 }}
                               >
-                                {alert.alert || "—"}
+                                {alert.display_message}
                               </span>
                             </td>
 
@@ -376,9 +451,10 @@ function ThreatAlerts() {
                               <button
                                 onClick={() => setSelectedAlert(alert)}
                                 style={{
-                                  background: "#1E40AF20",
+                                  background:
+                                    "color-mix(in srgb, var(--accent-blue) 12%, transparent)",
                                   color: "#60A5FA",
-                                  border: "1px solid #1E40AF",
+                                  border: "1px solid var(--accent-blue)",
                                   borderRadius: 8,
                                   padding: "6px 14px",
                                   fontSize: 12,
@@ -410,9 +486,9 @@ function ThreatAlerts() {
                   gap: 8,
                 }}
               >
-                <span style={{ color: "#475569", fontSize: 12 }}>
-                  Showing <strong style={{ color: "#94A3B8" }}>{filtered.length}</strong> of{" "}
-                  <strong style={{ color: "#94A3B8" }}>{totalAlerts}</strong> alerts
+                <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>
+                  Showing <strong style={{ color: "var(--text-muted)" }}>{filtered.length}</strong> of{" "}
+                  <strong style={{ color: "var(--text-muted)" }}>{totalAlerts}</strong> alerts
                 </span>
 
                 <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
@@ -432,7 +508,7 @@ function ThreatAlerts() {
                           display: "inline-block",
                         }}
                       />
-                      <span style={{ color: "#64748B", fontSize: 11 }}>
+                      <span style={{ color: "var(--text-faint)", fontSize: 11 }}>
                         {s.label}: {s.count}
                       </span>
                     </div>
@@ -450,7 +526,8 @@ function ThreatAlerts() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(2, 6, 23, 0.75)",
+            background:
+              theme === "dark" ? "rgba(2, 6, 23, 0.75)" : "rgba(15, 23, 42, 0.35)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -463,11 +540,12 @@ function ThreatAlerts() {
             style={{
               width: "100%",
               maxWidth: 460,
-              background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
-              border: "1px solid #334155",
+              background:
+                "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)",
+              border: "1px solid var(--border-color)",
               borderRadius: 16,
               padding: 24,
-              boxShadow: "0 10px 40px rgba(0,0,0,0.45)",
+              boxShadow: "var(--shadow-card)",
             }}
           >
             <div
@@ -479,17 +557,17 @@ function ThreatAlerts() {
               }}
             >
               <div>
-                <h3 style={{ color: "#F8FAFC", margin: 0, fontSize: 20 }}>
+                <h3 style={{ color: "var(--text-primary)", margin: 0, fontSize: 20 }}>
                   {selectedAlert.alert_id}
                 </h3>
-                <p style={{ color: "#64748B", margin: "4px 0 0", fontSize: 12 }}>
+                <p style={{ color: "var(--text-faint)", margin: "4px 0 0", fontSize: 12 }}>
                   {selectedAlert.activity_type}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedAlert(null)}
                 style={{
-                  color: "#94A3B8",
+                  color: "var(--text-muted)",
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
@@ -501,31 +579,79 @@ function ThreatAlerts() {
             </div>
 
             <div style={{ display: "grid", gap: 12 }}>
-              <div style={{ padding: 12, borderRadius: 10, background: "#0F172A", border: "1px solid #1E293B" }}>
-                <div style={{ color: "#64748B", fontSize: 11, marginBottom: 4 }}>Employee</div>
-                <div style={{ color: "#F1F5F9", fontSize: 14, fontWeight: 600 }}>
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  background: "var(--bg-surface-2)",
+                  border: "1px solid var(--border-soft)",
+                }}
+              >
+                <div style={{ color: "var(--text-faint)", fontSize: 11, marginBottom: 4 }}>
+                  Employee
+                </div>
+                <div style={{ color: "var(--text-primary)", fontSize: 14, fontWeight: 600 }}>
                   {selectedAlert.employee_name}
                 </div>
               </div>
 
-              <div style={{ padding: 12, borderRadius: 10, background: "#0F172A", border: "1px solid #1E293B" }}>
-                <div style={{ color: "#64748B", fontSize: 11, marginBottom: 4 }}>Activity Type</div>
-                <div style={{ color: "#F1F5F9", fontSize: 14, fontWeight: 600 }}>
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  background: "var(--bg-surface-2)",
+                  border: "1px solid var(--border-soft)",
+                }}
+              >
+                <div style={{ color: "var(--text-faint)", fontSize: 11, marginBottom: 4 }}>
+                  Activity Type
+                </div>
+                <div style={{ color: "var(--text-primary)", fontSize: 14, fontWeight: 600 }}>
                   {selectedAlert.activity_type}
                 </div>
               </div>
 
-              <div style={{ padding: 12, borderRadius: 10, background: "#0F172A", border: "1px solid #1E293B" }}>
-                <div style={{ color: "#64748B", fontSize: 11, marginBottom: 4 }}>Severity</div>
-                <div style={{ color: getSeverityStyle(selectedAlert.risk_level).color, fontSize: 14, fontWeight: 700 }}>
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  background: "var(--bg-surface-2)",
+                  border: "1px solid var(--border-soft)",
+                }}
+              >
+                <div style={{ color: "var(--text-faint)", fontSize: 11, marginBottom: 4 }}>
+                  Severity
+                </div>
+                <div
+                  style={{
+                    color: getSeverityStyle(selectedAlert.risk_level).color,
+                    fontSize: 14,
+                    fontWeight: 700,
+                  }}
+                >
                   {selectedAlert.risk_level}
                 </div>
               </div>
 
-              <div style={{ padding: 12, borderRadius: 10, background: "#0F172A", border: "1px solid #1E293B" }}>
-                <div style={{ color: "#64748B", fontSize: 11, marginBottom: 4 }}>Alert Message</div>
-                <div style={{ color: getAlertStyle(selectedAlert.alert).color, fontSize: 14, fontWeight: 700 }}>
-                  {selectedAlert.alert}
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  background: "var(--bg-surface-2)",
+                  border: "1px solid var(--border-soft)",
+                }}
+              >
+                <div style={{ color: "var(--text-faint)", fontSize: 11, marginBottom: 4 }}>
+                  Alert Message
+                </div>
+                <div
+                  style={{
+                    color: getAlertStyle(selectedAlert.display_message).color,
+                    fontSize: 14,
+                    fontWeight: 700,
+                  }}
+                >
+                  {selectedAlert.display_message}
                 </div>
               </div>
             </div>

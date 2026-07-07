@@ -28,8 +28,8 @@ function StatMini({ title, value, color }) {
   return (
     <div
       style={{
-        background: "#0F172A",
-        border: "1px solid #334155",
+        background: "var(--bg-surface-2)",
+        border: "1px solid var(--border-color)",
         borderRadius: 10,
         padding: "8px 16px",
         textAlign: "center",
@@ -39,7 +39,7 @@ function StatMini({ title, value, color }) {
       <div style={{ color, fontSize: 20, fontWeight: 700 }}>{value}</div>
       <div
         style={{
-          color: "#64748B",
+          color: "var(--text-faint)",
           fontSize: 9,
           textTransform: "uppercase",
           letterSpacing: "0.05em",
@@ -55,19 +55,22 @@ function ChartCard({ title, subtitle, icon, children }) {
   return (
     <div
       style={{
-        background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
+        background:
+          "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)",
         borderRadius: 16,
         padding: 20,
-        border: "1px solid #334155",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
+        border: "1px solid var(--border-color)",
+        boxShadow: "var(--shadow-card)",
         minWidth: 0,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         {icon}
-        <h3 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>{title}</h3>
+        <h3 style={{ color: "var(--text-primary)", fontSize: 16, margin: 0 }}>{title}</h3>
       </div>
-      <p style={{ color: "#64748B", fontSize: 12, margin: "0 0 16px" }}>{subtitle}</p>
+      <p style={{ color: "var(--text-faint)", fontSize: 12, margin: "0 0 16px" }}>
+        {subtitle}
+      </p>
       <div style={{ minHeight: 300, width: "100%" }}>{children}</div>
     </div>
   );
@@ -81,12 +84,12 @@ function EmptyChartState({ message, height = 280 }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "#64748B",
+        color: "var(--text-faint)",
         fontSize: 14,
         textAlign: "center",
-        border: "1px dashed #334155",
+        border: "1px dashed var(--border-color)",
         borderRadius: 12,
-        background: "#0F172A",
+        background: "var(--bg-surface-2)",
         padding: 16,
       }}
     >
@@ -95,7 +98,7 @@ function EmptyChartState({ message, height = 280 }) {
   );
 }
 
-function Reports() {
+function Reports({ theme, toggleTheme }) {
   const [riskTrend, setRiskTrend] = useState([]);
   const [threatClassification, setThreatClassification] = useState([]);
   const [activitiesByDate, setActivitiesByDate] = useState([]);
@@ -166,11 +169,20 @@ function Reports() {
   const totalDates = activityBarData.length;
   const totalThreats = pieData.reduce((sum, item) => sum + (item.value ?? 0), 0);
 
+  const chartAxisColor = "var(--text-faint)";
+  const chartGridColor = "var(--border-soft)";
+  const tooltipStyle = {
+    background: "var(--bg-surface-2)",
+    border: "1px solid var(--border-color)",
+    borderRadius: "10px",
+    color: "var(--text-primary)",
+  };
+
   return (
     <>
       <Sidebar />
       <div className="dashboard-content">
-        <Navbar user={currentUser} />
+        <Navbar user={currentUser} theme={theme} toggleTheme={toggleTheme} />
 
         <div className="dashboard-header">
           <div>
@@ -187,9 +199,9 @@ function Reports() {
         </div>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
-          <StatMini title="Trend Points" value={totalTrend} color="#38BDF8" />
-          <StatMini title="Threat Types" value={totalThreatTypes} color="#F97316" />
-          <StatMini title="Activity Types" value={totalDates} color="#10B981" />
+          <StatMini title="Trend Points" value={totalTrend} color="var(--accent-cyan)" />
+          <StatMini title="Threat Types" value={totalThreatTypes} color="var(--accent-orange)" />
+          <StatMini title="Activity Types" value={totalDates} color="var(--accent-green)" />
         </div>
 
         <div
@@ -201,7 +213,10 @@ function Reports() {
             flexWrap: "wrap",
           }}
         >
-          <label htmlFor="report-date" style={{ color: "#94A3B8", fontSize: 13, fontWeight: 600 }}>
+          <label
+            htmlFor="report-date"
+            style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 600 }}
+          >
             Select Date:
           </label>
 
@@ -211,30 +226,30 @@ function Reports() {
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             style={{
-              background: "#0F172A",
-              border: "1px solid #334155",
-              color: "#F1F5F9",
+              background: "var(--bg-surface-2)",
+              border: "1px solid var(--border-color)",
+              color: "var(--text-primary)",
               borderRadius: 8,
               padding: "8px 12px",
               fontSize: 13,
             }}
           />
 
-          <span style={{ color: "#64748B", fontSize: 12 }}>
+          <span style={{ color: "var(--text-faint)", fontSize: 12 }}>
             Default test date: {DEFAULT_ACTIVITY_DATE}
           </span>
         </div>
 
         {loading ? (
-          <div style={{ color: "#64748B", textAlign: "center", padding: "40px 0" }}>
+          <div style={{ color: "var(--text-faint)", textAlign: "center", padding: "40px 0" }}>
             Loading reports...
           </div>
         ) : error ? (
           <div
             style={{
-              color: "#FCA5A5",
-              background: "#111827",
-              border: "1px solid #7f1d1d",
+              color: "var(--danger-text)",
+              background: "var(--bg-surface)",
+              border: "1px solid var(--danger-text)",
               borderRadius: 10,
               padding: 14,
             }}
@@ -247,7 +262,7 @@ function Reports() {
               <ChartCard
                 title="Risk Trend Analysis"
                 subtitle="Current employee risk scores from backend"
-                icon={<FaChartLine color="#38BDF8" size={15} />}
+                icon={<FaChartLine color="var(--accent-cyan)" size={15} />}
               >
                 {trendChartData.length === 0 ? (
                   <EmptyChartState message="No risk trend data available." height={320} />
@@ -255,17 +270,15 @@ function Reports() {
                   <div style={{ width: "100%", height: 320, minWidth: 0, minHeight: 320 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={trendChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                        <XAxis dataKey="name" stroke="#64748B" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#64748B" tick={{ fontSize: 11 }} domain={[0, 100]} />
-                        <Tooltip
-                          contentStyle={{
-                            background: "#0F172A",
-                            border: "1px solid #334155",
-                            color: "#F1F5F9",
-                          }}
+                        <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+                        <XAxis dataKey="name" stroke={chartAxisColor} tick={{ fontSize: 11 }} />
+                        <YAxis
+                          stroke={chartAxisColor}
+                          tick={{ fontSize: 11 }}
+                          domain={[0, 100]}
                         />
-                        <Legend />
+                        <Tooltip contentStyle={tooltipStyle} wrapperStyle={{ outline: "none" }} />
+                        <Legend wrapperStyle={{ fontSize: 11, color: "var(--text-faint)" }} />
                         <Line
                           type="monotone"
                           dataKey="score"
@@ -293,7 +306,7 @@ function Reports() {
               <ChartCard
                 title="Threat Classification"
                 subtitle="AI-detected threat categories across employees"
-                icon={<FaChartPie color="#F97316" size={15} />}
+                icon={<FaChartPie color="var(--accent-orange)" size={15} />}
               >
                 {pieData.length === 0 ? (
                   <EmptyChartState message="No threat classification data available." height={300} />
@@ -327,7 +340,7 @@ function Reports() {
                                   <text
                                     x={cx}
                                     y={cy - 6}
-                                    fill="#E5E7EB"
+                                    fill="var(--text-primary)"
                                     textAnchor="middle"
                                     dominantBaseline="central"
                                     style={{ fontSize: 16, fontWeight: 700 }}
@@ -337,7 +350,7 @@ function Reports() {
                                   <text
                                     x={cx}
                                     y={cy + 12}
-                                    fill="#9CA3AF"
+                                    fill="var(--text-faint)"
                                     textAnchor="middle"
                                     dominantBaseline="central"
                                     style={{ fontSize: 11 }}
@@ -350,14 +363,11 @@ function Reports() {
                           />
                         </Pie>
 
-                        <Tooltip
-                          contentStyle={{
-                            background: "#0F172A",
-                            border: "1px solid #334155",
-                            color: "#F1F5F9",
-                          }}
+                        <Tooltip contentStyle={tooltipStyle} wrapperStyle={{ outline: "none" }} />
+                        <Legend
+                          iconType="circle"
+                          wrapperStyle={{ fontSize: 11, color: "var(--text-faint)" }}
                         />
-                        <Legend iconType="circle" wrapperStyle={{ fontSize: 11, color: "#9CA3AF" }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -367,7 +377,7 @@ function Reports() {
               <ChartCard
                 title="Activities by Date"
                 subtitle={`Activity volume for ${selectedDate}`}
-                icon={<FaChartBar color="#10B981" size={15} />}
+                icon={<FaChartBar color="var(--accent-green)" size={15} />}
               >
                 {activityBarData.length === 0 ? (
                   <EmptyChartState
@@ -378,16 +388,14 @@ function Reports() {
                   <div style={{ width: "100%", height: 300, minWidth: 0, minHeight: 300 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={activityBarData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                        <XAxis dataKey="date" stroke="#64748B" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#64748B" tick={{ fontSize: 11 }} allowDecimals={false} />
-                        <Tooltip
-                          contentStyle={{
-                            background: "#0F172A",
-                            border: "1px solid #334155",
-                            color: "#F1F5F9",
-                          }}
+                        <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+                        <XAxis dataKey="date" stroke={chartAxisColor} tick={{ fontSize: 11 }} />
+                        <YAxis
+                          stroke={chartAxisColor}
+                          tick={{ fontSize: 11 }}
+                          allowDecimals={false}
                         />
+                        <Tooltip contentStyle={tooltipStyle} wrapperStyle={{ outline: "none" }} />
                         <Bar dataKey="count" fill="#10B981" radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>

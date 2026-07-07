@@ -11,7 +11,7 @@ import StatCard from "../components/StatCard";
 import api from "../services/api";
 import "../styles/Dashboard.css";
 
-function Dashboard() {
+function Dashboard({ theme, toggleTheme }) {
   const [dashboardData, setDashboardData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -48,8 +48,6 @@ function Dashboard() {
 
   const lowRisk = dashboardData?.low_risk ?? dashboardData?.lowRisk ?? 0;
 
-  // Trend values are hardcoded (per Version 1 integration decision).
-  // Kept for visual indicator purposes only — not tied to backend.
   const stats = [
     {
       title: "Total Activities",
@@ -90,7 +88,7 @@ function Dashboard() {
       <Sidebar />
 
       <div className="dashboard-content">
-        <Navbar user={currentUser} />
+        <Navbar user={currentUser} theme={theme} toggleTheme={toggleTheme} />
 
         <div className="dashboard-header">
           <div>
@@ -112,9 +110,9 @@ function Dashboard() {
               marginBottom: "16px",
               padding: "12px 16px",
               borderRadius: "12px",
-              border: "1px solid #7f1d1d",
-              background: "#1f2937",
-              color: "#fca5a5",
+              border: "1px solid var(--danger-text)",
+              background: "var(--bg-surface)",
+              color: "var(--danger-text)",
             }}
           >
             {error}

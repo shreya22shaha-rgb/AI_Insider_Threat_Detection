@@ -5,7 +5,7 @@ import "../styles/Dashboard.css";
 import api from "../services/api";
 import { FaSearch, FaUsers } from "react-icons/fa";
 
-function Users() {
+function Users({ theme, toggleTheme }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,8 +28,7 @@ function Users() {
         const data = Array.isArray(res.data) ? res.data : res.data?.users || [];
         setUsers(data);
       })
-      .catch((err) => {
-        console.error("Users API error:", err);
+      .catch(() => {
         setError("Failed to load users data.");
       })
       .finally(() => setLoading(false));
@@ -45,7 +44,7 @@ function Users() {
         !search ||
         (user.username && user.username.toLowerCase().includes(search.toLowerCase())) ||
         (user.email && user.email.toLowerCase().includes(search.toLowerCase())) ||
-        (String(user.id).toLowerCase().includes(search.toLowerCase()));
+        String(user.id).toLowerCase().includes(search.toLowerCase());
 
       return matchRole && matchSearch;
     });
@@ -62,7 +61,7 @@ function Users() {
       <Sidebar />
 
       <div className="dashboard-content">
-        <Navbar user={currentUser} />
+        <Navbar user={currentUser} theme={theme} toggleTheme={toggleTheme} />
 
         <div className="dashboard-header">
           <div>
@@ -80,14 +79,13 @@ function Users() {
 
         <div
           style={{
-            background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
+            background: "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)",
             borderRadius: 16,
             padding: 24,
-            border: "1px solid #334155",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
+            border: "1px solid var(--border-color)",
+            boxShadow: "var(--shadow-card)",
           }}
         >
-          {/* Header + summary */}
           <div
             style={{
               display: "flex",
@@ -100,27 +98,27 @@ function Users() {
           >
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <FaUsers color="#38BDF8" size={15} />
-                <h2 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>
+                <FaUsers color="var(--accent-cyan)" size={15} />
+                <h2 style={{ color: "var(--text-primary)", fontSize: 16, margin: 0 }}>
                   Registered Users
                 </h2>
               </div>
-              <p style={{ color: "#64748B", fontSize: 12, marginTop: 4 }}>
+              <p style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 4 }}>
                 User records from backend GET /users endpoint.
               </p>
             </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               {[
-                { label: "Users", value: summary.total, color: "#38BDF8" },
-                { label: "Admins", value: summary.admins, color: "#F97316" },
-                { label: "Security Admins", value: summary.securityAdmins, color: "#10B981" },
+                { label: "Users", value: summary.total, color: "var(--accent-cyan)" },
+                { label: "Admins", value: summary.admins, color: "var(--accent-orange)" },
+                { label: "Security Admins", value: summary.securityAdmins, color: "var(--accent-green)" },
               ].map((item) => (
                 <div
                   key={item.label}
                   style={{
-                    background: "#0F172A",
-                    border: "1px solid #334155",
+                    background: "var(--bg-surface-2)",
+                    border: "1px solid var(--border-color)",
                     borderRadius: 10,
                     padding: "8px 16px",
                     textAlign: "center",
@@ -132,7 +130,7 @@ function Users() {
                   </div>
                   <div
                     style={{
-                      color: "#64748B",
+                      color: "var(--text-faint)",
                       fontSize: 9,
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
@@ -145,20 +143,19 @@ function Users() {
             </div>
           </div>
 
-          {/* Search */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: 10,
-              background: "#0F172A",
-              border: "1px solid #334155",
+              background: "var(--bg-surface-2)",
+              border: "1px solid var(--border-color)",
               borderRadius: 10,
               padding: "10px 16px",
               marginBottom: 16,
             }}
           >
-            <FaSearch color="#64748B" size={12} />
+            <FaSearch color="var(--text-faint)" size={12} />
             <input
               type="text"
               placeholder="Search by username, email or ID..."
@@ -168,23 +165,24 @@ function Users() {
                 background: "transparent",
                 border: "none",
                 outline: "none",
-                color: "#F1F5F9",
+                color: "var(--text-primary)",
                 fontSize: 13,
                 width: "100%",
               }}
             />
           </div>
 
-          {/* Role filter */}
           <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
             {["All", "admin", "security_admin", "user"].map((role) => (
               <button
                 key={role}
                 onClick={() => setRoleFilter(role === "All" ? "All" : role)}
                 style={{
-                  background: roleFilter === role ? "#38BDF820" : "#0F172A",
-                  border: `1px solid ${roleFilter === role ? "#38BDF8" : "#334155"}`,
-                  color: roleFilter === role ? "#38BDF8" : "#64748B",
+                  background: roleFilter === role ? "rgba(56, 189, 248, 0.12)" : "var(--bg-surface-2)",
+                  border: `1px solid ${
+                    roleFilter === role ? "var(--accent-cyan)" : "var(--border-color)"
+                  }`,
+                  color: roleFilter === role ? "var(--accent-cyan)" : "var(--text-faint)",
                   borderRadius: 999,
                   padding: "5px 14px",
                   fontSize: 12,
@@ -198,17 +196,16 @@ function Users() {
             ))}
           </div>
 
-          {/* Table */}
           {loading ? (
-            <div style={{ color: "#64748B", textAlign: "center", padding: "40px 0" }}>
+            <div style={{ color: "var(--text-faint)", textAlign: "center", padding: "40px 0" }}>
               Loading users...
             </div>
           ) : error ? (
             <div
               style={{
-                color: "#FCA5A5",
-                background: "#111827",
-                border: "1px solid #7f1d1d",
+                color: "var(--danger-text)",
+                background: "var(--bg-surface)",
+                border: "1px solid var(--danger-text)",
                 borderRadius: 10,
                 padding: 14,
               }}
@@ -219,14 +216,14 @@ function Users() {
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid #1E293B" }}>
+                  <tr style={{ borderBottom: "1px solid var(--border-soft)" }}>
                     {["ID", "USERNAME", "EMAIL", "ROLE"].map((col) => (
                       <th
                         key={col}
                         style={{
                           padding: "10px 12px",
                           textAlign: "left",
-                          color: "#475569",
+                          color: "var(--text-faint)",
                           fontSize: 11,
                           fontWeight: 700,
                           textTransform: "uppercase",
@@ -244,7 +241,7 @@ function Users() {
                       <td
                         colSpan={4}
                         style={{
-                          color: "#64748B",
+                          color: "var(--text-faint)",
                           textAlign: "center",
                           padding: "32px 0",
                         }}
@@ -256,20 +253,24 @@ function Users() {
                     filteredUsers.map((user, idx) => (
                       <tr
                         key={idx}
-                        style={{ borderBottom: "1px solid #1E293B" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#1E293B")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                        style={{ borderBottom: "1px solid var(--border-soft)" }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "var(--bg-hover)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
                       >
-                        <td style={{ padding: "14px 12px", color: "#F1F5F9", fontSize: 13 }}>
+                        <td style={{ padding: "14px 12px", color: "var(--text-primary)", fontSize: 13 }}>
                           {user.id}
                         </td>
-                        <td style={{ padding: "14px 12px", color: "#F1F5F9", fontSize: 13 }}>
+                        <td style={{ padding: "14px 12px", color: "var(--text-primary)", fontSize: 13 }}>
                           {user.username}
                         </td>
-                        <td style={{ padding: "14px 12px", color: "#94A3B8", fontSize: 12 }}>
+                        <td style={{ padding: "14px 12px", color: "var(--text-muted)", fontSize: 12 }}>
                           {user.email}
                         </td>
-                        <td style={{ padding: "14px 12px", color: "#F59E0B", fontSize: 12 }}>
+                        <td style={{ padding: "14px 12px", color: "var(--accent-orange)", fontSize: 12 }}>
                           {user.role}
                         </td>
                       </tr>

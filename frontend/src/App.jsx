@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -11,6 +12,19 @@ import SecuritySummary from "./pages/SecuritySummary";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("theme") || "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
@@ -20,7 +34,7 @@ function App() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <Dashboard theme={theme} toggleTheme={toggleTheme} />
           </ProtectedRoute>
         }
       />
@@ -28,7 +42,7 @@ function App() {
         path="/users"
         element={
           <ProtectedRoute>
-            <Users />
+            <Users theme={theme} toggleTheme={toggleTheme} />
           </ProtectedRoute>
         }
       />
@@ -36,7 +50,7 @@ function App() {
         path="/activity-logs"
         element={
           <ProtectedRoute>
-            <ActivityLogs />
+            <ActivityLogs theme={theme} toggleTheme={toggleTheme} />
           </ProtectedRoute>
         }
       />
@@ -44,7 +58,7 @@ function App() {
         path="/threat-alerts"
         element={
           <ProtectedRoute>
-            <ThreatAlerts />
+            <ThreatAlerts theme={theme} toggleTheme={toggleTheme} />
           </ProtectedRoute>
         }
       />
@@ -52,7 +66,7 @@ function App() {
         path="/ai-analysis"
         element={
           <ProtectedRoute>
-            <AIAnalysis />
+            <AIAnalysis theme={theme} toggleTheme={toggleTheme} />
           </ProtectedRoute>
         }
       />
@@ -60,7 +74,7 @@ function App() {
         path="/reports"
         element={
           <ProtectedRoute>
-            <Reports />
+            <Reports theme={theme} toggleTheme={toggleTheme} />
           </ProtectedRoute>
         }
       />
@@ -68,7 +82,7 @@ function App() {
         path="/settings"
         element={
           <ProtectedRoute>
-            <Settings />
+            <Settings theme={theme} toggleTheme={toggleTheme} />
           </ProtectedRoute>
         }
       />
@@ -76,7 +90,7 @@ function App() {
         path="/security-summary"
         element={
           <ProtectedRoute>
-            <SecuritySummary />
+            <SecuritySummary theme={theme} toggleTheme={toggleTheme} />
           </ProtectedRoute>
         }
       />

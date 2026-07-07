@@ -23,11 +23,13 @@ const statusColors = {
 
 function getStatusStyle(status) {
   const key = status?.toLowerCase();
-  return statusColors[key] || {
-    color: "#94A3B8",
-    bg: "#94A3B820",
-    label: status || "Unknown",
-  };
+  return (
+    statusColors[key] || {
+      color: "var(--text-muted)",
+      bg: "color-mix(in srgb, var(--text-muted) 12%, transparent)",
+      label: status || "Unknown",
+    }
+  );
 }
 
 function SkeletonRow() {
@@ -39,7 +41,8 @@ function SkeletonRow() {
             style={{
               height: 14,
               borderRadius: 6,
-              background: "linear-gradient(90deg,#1E293B 25%,#334155 50%,#1E293B 75%)",
+              background:
+                "linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-surface-3) 50%, var(--bg-surface) 75%)",
               backgroundSize: "200% 100%",
               animation: "shimmer 1.2s ease-in-out infinite",
               width: i === 0 ? "70px" : i === 1 ? "130px" : "100px",
@@ -51,7 +54,7 @@ function SkeletonRow() {
   );
 }
 
-function ActivityLogs() {
+function ActivityLogs({ theme, toggleTheme }) {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -88,12 +91,14 @@ function ActivityLogs() {
       const matchFilter =
         filter === "All" || riskOrStatus.toLowerCase() === filter.toLowerCase();
 
+      const query = search.toLowerCase();
+
       const matchSearch =
         !search ||
-        log.employee_name?.toLowerCase().includes(search.toLowerCase()) ||
-        log.activity_type?.toLowerCase().includes(search.toLowerCase()) ||
-        log.department?.toLowerCase().includes(search.toLowerCase()) ||
-        String(log.log_id || log.activity_id || "").toLowerCase().includes(search.toLowerCase());
+        log.employee_name?.toLowerCase().includes(query) ||
+        log.activity_type?.toLowerCase().includes(query) ||
+        log.department?.toLowerCase().includes(query) ||
+        String(log.log_id || log.activity_id || "").toLowerCase().includes(query);
 
       return matchFilter && matchSearch;
     });
@@ -110,7 +115,7 @@ function ActivityLogs() {
     <>
       <Sidebar />
       <div className="dashboard-content">
-        <Navbar user={currentUser} />
+        <Navbar user={currentUser} theme={theme} toggleTheme={toggleTheme} />
 
         <style>{`
           @keyframes shimmer {
@@ -134,14 +139,14 @@ function ActivityLogs() {
 
         <div
           style={{
-            background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
+            background:
+              "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)",
             borderRadius: 16,
             padding: 24,
-            border: "1px solid #334155",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
+            border: "1px solid var(--border-color)",
+            boxShadow: "var(--shadow-card)",
           }}
         >
-          {/* Header */}
           <div
             style={{
               display: "flex",
@@ -154,36 +159,51 @@ function ActivityLogs() {
           >
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <FaList color="#38BDF8" size={15} />
-                <h2 style={{ color: "#F1F5F9", fontSize: 16, fontWeight: 600, margin: 0 }}>
+                <FaList color="var(--accent-cyan)" size={15} />
+                <h2
+                  style={{
+                    color: "var(--text-primary)",
+                    fontSize: 16,
+                    fontWeight: 600,
+                    margin: 0,
+                  }}
+                >
                   Recent Activity Logs
                 </h2>
               </div>
-              <p style={{ color: "#64748B", fontSize: 12, marginTop: 4 }}>
+              <p
+                style={{
+                  color: "var(--text-faint)",
+                  fontSize: 12,
+                  marginTop: 4,
+                }}
+              >
                 Security-relevant events and employee actions from GET /activities.
               </p>
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
               {[
-                { label: "TOTAL LOGS", value: totalLogs, color: "#38BDF8" },
-                { label: "HIGH RISK", value: criticalCount, color: "#EF4444" },
+                { label: "TOTAL LOGS", value: totalLogs, color: "var(--accent-cyan)" },
+                { label: "HIGH RISK", value: criticalCount, color: "var(--accent-red)" },
               ].map((s) => (
                 <div
                   key={s.label}
                   style={{
-                    background: "#0F172A",
-                    border: "1px solid #334155",
+                    background: "var(--bg-surface-2)",
+                    border: "1px solid var(--border-color)",
                     borderRadius: 10,
                     padding: "8px 16px",
                     textAlign: "center",
                     minWidth: 70,
                   }}
                 >
-                  <div style={{ color: s.color, fontSize: 20, fontWeight: 700 }}>{s.value}</div>
+                  <div style={{ color: s.color, fontSize: 20, fontWeight: 700 }}>
+                    {s.value}
+                  </div>
                   <div
                     style={{
-                      color: "#64748B",
+                      color: "var(--text-faint)",
                       fontSize: 9,
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
@@ -196,20 +216,19 @@ function ActivityLogs() {
             </div>
           </div>
 
-          {/* Search */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: 10,
-              background: "#0F172A",
-              border: "1px solid #334155",
+              background: "var(--bg-surface-2)",
+              border: "1px solid var(--border-color)",
               borderRadius: 10,
               padding: "10px 16px",
               marginBottom: 14,
             }}
           >
-            <FaSearch color="#64748B" size={12} />
+            <FaSearch color="var(--text-faint)" size={12} />
             <input
               type="text"
               placeholder="Search by employee, activity type, department..."
@@ -219,23 +238,27 @@ function ActivityLogs() {
                 background: "transparent",
                 border: "none",
                 outline: "none",
-                color: "#F1F5F9",
+                color: "var(--text-primary)",
                 fontSize: 13,
                 width: "100%",
               }}
             />
           </div>
 
-          {/* Filter Buttons */}
           <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
             {["All", "Critical", "High", "Medium", "Low"].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
                 style={{
-                  background: filter === f ? "#38BDF820" : "#0F172A",
-                  border: `1px solid ${filter === f ? "#38BDF8" : "#334155"}`,
-                  color: filter === f ? "#38BDF8" : "#64748B",
+                  background:
+                    filter === f
+                      ? "color-mix(in srgb, var(--accent-cyan) 12%, transparent)"
+                      : "var(--bg-surface-2)",
+                  border: `1px solid ${
+                    filter === f ? "var(--accent-cyan)" : "var(--border-color)"
+                  }`,
+                  color: filter === f ? "var(--accent-cyan)" : "var(--text-faint)",
                   borderRadius: 999,
                   padding: "5px 14px",
                   fontSize: 12,
@@ -248,11 +271,10 @@ function ActivityLogs() {
             ))}
           </div>
 
-          {/* Table */}
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #1E293B" }}>
+                <tr style={{ borderBottom: "1px solid var(--border-soft)" }}>
                   {["LOG ID", "ACTIVITY TYPE", "EMPLOYEE", "DEPARTMENT", "RISK LEVEL", "TIME"].map(
                     (col) => (
                       <th
@@ -260,7 +282,7 @@ function ActivityLogs() {
                         style={{
                           padding: "10px 14px",
                           textAlign: "left",
-                          color: "#475569",
+                          color: "var(--text-faint)",
                           fontSize: 11,
                           fontWeight: 700,
                           textTransform: "uppercase",
@@ -283,9 +305,9 @@ function ActivityLogs() {
                     <td colSpan={6} style={{ padding: "24px", textAlign: "center" }}>
                       <div
                         style={{
-                          color: "#FCA5A5",
-                          background: "#1f2937",
-                          border: "1px solid #7f1d1d",
+                          color: "var(--danger-text)",
+                          background: "var(--bg-surface)",
+                          border: "1px solid var(--danger-text)",
                           borderRadius: 10,
                           padding: "12px 20px",
                           display: "inline-block",
@@ -300,7 +322,7 @@ function ActivityLogs() {
                     <td
                       colSpan={6}
                       style={{
-                        color: "#64748B",
+                        color: "var(--text-faint)",
                         textAlign: "center",
                         padding: "32px 0",
                         fontSize: 14,
@@ -317,16 +339,20 @@ function ActivityLogs() {
                       <tr
                         key={idx}
                         style={{
-                          borderBottom: "1px solid #1E293B",
+                          borderBottom: "1px solid var(--border-soft)",
                           transition: "background 0.15s",
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#1E293B")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "var(--bg-hover)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
                       >
                         <td
                           style={{
                             padding: "14px",
-                            color: "#38BDF8",
+                            color: "var(--accent-cyan)",
                             fontSize: 12,
                             fontWeight: 700,
                           }}
@@ -335,7 +361,13 @@ function ActivityLogs() {
                         </td>
 
                         <td style={{ padding: "14px" }}>
-                          <div style={{ color: "#F1F5F9", fontSize: 13, fontWeight: 600 }}>
+                          <div
+                            style={{
+                              color: "var(--text-primary)",
+                              fontSize: 13,
+                              fontWeight: 600,
+                            }}
+                          >
                             {log.activity_type || log.event || "—"}
                           </div>
                         </td>
@@ -346,11 +378,11 @@ function ActivityLogs() {
                               display: "flex",
                               alignItems: "center",
                               gap: 6,
-                              color: "#94A3B8",
+                              color: "var(--text-muted)",
                               fontSize: 12,
                             }}
                           >
-                            <FaUserSecret size={10} color="#475569" />
+                            <FaUserSecret size={10} color="var(--text-secondary)" />
                             {log.employee_name || log.user || "—"}
                           </div>
                         </td>
@@ -361,11 +393,11 @@ function ActivityLogs() {
                               display: "flex",
                               alignItems: "center",
                               gap: 6,
-                              color: "#94A3B8",
+                              color: "var(--text-muted)",
                               fontSize: 12,
                             }}
                           >
-                            <FaMapMarkerAlt size={10} color="#475569" />
+                            <FaMapMarkerAlt size={10} color="var(--text-secondary)" />
                             {log.department || "—"}
                           </div>
                         </td>
@@ -392,11 +424,11 @@ function ActivityLogs() {
                               display: "flex",
                               alignItems: "center",
                               gap: 6,
-                              color: "#64748B",
+                              color: "var(--text-faint)",
                               fontSize: 12,
                             }}
                           >
-                            <FaClock size={10} color="#475569" />
+                            <FaClock size={10} color="var(--text-secondary)" />
                             {log.timestamp
                               ? new Date(log.timestamp).toLocaleString()
                               : "Just now"}
@@ -411,9 +443,9 @@ function ActivityLogs() {
           </div>
 
           {!loading && !error && (
-            <div style={{ marginTop: 16, color: "#475569", fontSize: 12 }}>
-              Showing <strong style={{ color: "#94A3B8" }}>{filtered.length}</strong> of{" "}
-              <strong style={{ color: "#94A3B8" }}>{totalLogs}</strong> logs
+            <div style={{ marginTop: 16, color: "var(--text-secondary)", fontSize: 12 }}>
+              Showing <strong style={{ color: "var(--text-muted)" }}>{filtered.length}</strong> of{" "}
+              <strong style={{ color: "var(--text-muted)" }}>{totalLogs}</strong> logs
             </div>
           )}
         </div>

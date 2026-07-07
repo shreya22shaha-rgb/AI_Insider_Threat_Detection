@@ -15,8 +15,8 @@ function StatBox({ label, value, color }) {
   return (
     <div
       style={{
-        background: "#0F172A",
-        border: "1px solid #334155",
+        background: "var(--bg-surface-2)",
+        border: "1px solid var(--border-color)",
         borderRadius: 10,
         padding: "8px 16px",
         textAlign: "center",
@@ -26,7 +26,7 @@ function StatBox({ label, value, color }) {
       <div style={{ color, fontSize: 20, fontWeight: 700 }}>{value}</div>
       <div
         style={{
-          color: "#64748B",
+          color: "var(--text-faint)",
           fontSize: 9,
           textTransform: "uppercase",
           letterSpacing: "0.05em",
@@ -42,15 +42,15 @@ function InsightCard({ title, icon, children }) {
   return (
     <div
       style={{
-        background: "#0F172A",
-        border: "1px solid #334155",
+        background: "var(--bg-surface-2)",
+        border: "1px solid var(--border-color)",
         borderRadius: 14,
         padding: 18,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         {icon}
-        <h3 style={{ color: "#F1F5F9", fontSize: 15, margin: 0 }}>{title}</h3>
+        <h3 style={{ color: "var(--text-primary)", fontSize: 15, margin: 0 }}>{title}</h3>
       </div>
       {children}
     </div>
@@ -76,7 +76,7 @@ function Badge({ label, color, bg }) {
   );
 }
 
-function AIAnalysis() {
+function AIAnalysis({ theme, toggleTheme }) {
   const [predictions, setPredictions] = useState([]);
   const [behaviors, setBehaviors] = useState([]);
   const [classifications, setClassifications] = useState([]);
@@ -160,7 +160,7 @@ function AIAnalysis() {
       <Sidebar />
 
       <div className="dashboard-content">
-        <Navbar user={currentUser} />
+        <Navbar user={currentUser} theme={theme} toggleTheme={toggleTheme} />
 
         <div className="dashboard-header">
           <div>
@@ -178,11 +178,12 @@ function AIAnalysis() {
 
         <div
           style={{
-            background: "linear-gradient(135deg,#1E293B 0%,#0F172A 100%)",
+            background:
+              "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)",
             borderRadius: 16,
             padding: 24,
-            border: "1px solid #334155",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
+            border: "1px solid var(--border-color)",
+            boxShadow: "var(--shadow-card)",
           }}
         >
           <div
@@ -197,34 +198,34 @@ function AIAnalysis() {
           >
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <FaRobot size={16} color="#38BDF8" />
-                <h2 style={{ color: "#F1F5F9", fontSize: 16, margin: 0 }}>
+                <FaRobot size={16} color="var(--accent-cyan)" />
+                <h2 style={{ color: "var(--text-primary)", fontSize: 16, margin: 0 }}>
                   AI Threat Intelligence
                 </h2>
               </div>
-              <p style={{ color: "#64748B", fontSize: 12, margin: "6px 0 0" }}>
+              <p style={{ color: "var(--text-faint)", fontSize: 12, margin: "6px 0 0" }}>
                 Predictions, behavior anomalies, and classification signals from backend AI models.
               </p>
             </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <StatBox label="Predictions" value={totalPredictions} color="#38BDF8" />
-              <StatBox label="High Risk" value={highRiskPredictions} color="#EF4444" />
-              <StatBox label="Behaviors" value={suspiciousBehaviors} color="#F59E0B" />
-              <StatBox label="Threat Types" value={classifiedThreats} color="#10B981" />
+              <StatBox label="Predictions" value={totalPredictions} color="var(--accent-cyan)" />
+              <StatBox label="High Risk" value={highRiskPredictions} color="var(--accent-red)" />
+              <StatBox label="Behaviors" value={suspiciousBehaviors} color="var(--accent-orange)" />
+              <StatBox label="Threat Types" value={classifiedThreats} color="var(--accent-green)" />
             </div>
           </div>
 
           {loading ? (
-            <div style={{ color: "#64748B", textAlign: "center", padding: "40px 0" }}>
+            <div style={{ color: "var(--text-faint)", textAlign: "center", padding: "40px 0" }}>
               Loading AI analysis...
             </div>
           ) : error ? (
             <div
               style={{
-                color: "#FCA5A5",
-                background: "#111827",
-                border: "1px solid #7f1d1d",
+                color: "var(--danger-text)",
+                background: "var(--bg-surface)",
+                border: "1px solid var(--danger-text)",
                 borderRadius: 10,
                 padding: 14,
               }}
@@ -241,10 +242,10 @@ function AIAnalysis() {
             >
               <InsightCard
                 title="Risk Predictions"
-                icon={<FaChartLine color="#38BDF8" size={14} />}
+                icon={<FaChartLine color="var(--accent-cyan)" size={14} />}
               >
                 {normalizedPredictions.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                  <p style={{ color: "var(--text-faint)", fontSize: 13, margin: 0 }}>
                     No prediction data available.
                   </p>
                 ) : (
@@ -257,8 +258,8 @@ function AIAnalysis() {
                         <div
                           key={idx}
                           style={{
-                            border: "1px solid #1E293B",
-                            background: "#111827",
+                            border: "1px solid var(--border-soft)",
+                            background: "var(--bg-surface)",
                             borderRadius: 10,
                             padding: 12,
                           }}
@@ -267,7 +268,7 @@ function AIAnalysis() {
                             <div>
                               <p
                                 style={{
-                                  color: "#F1F5F9",
+                                  color: "var(--text-primary)",
                                   fontSize: 13,
                                   fontWeight: 600,
                                   margin: 0,
@@ -275,7 +276,13 @@ function AIAnalysis() {
                               >
                                 {item.name}
                               </p>
-                              <p style={{ color: "#64748B", fontSize: 12, margin: "4px 0 0" }}>
+                              <p
+                                style={{
+                                  color: "var(--text-faint)",
+                                  fontSize: 12,
+                                  margin: "4px 0 0",
+                                }}
+                              >
                                 Score: {item.score}
                               </p>
                             </div>
@@ -294,10 +301,10 @@ function AIAnalysis() {
 
               <InsightCard
                 title="Behavior Analysis"
-                icon={<FaBrain color="#A78BFA" size={14} />}
+                icon={<FaBrain color="var(--accent-purple)" size={14} />}
               >
                 {normalizedBehaviors.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                  <p style={{ color: "var(--text-faint)", fontSize: 13, margin: 0 }}>
                     No behavior analysis available.
                   </p>
                 ) : (
@@ -306,15 +313,15 @@ function AIAnalysis() {
                       <div
                         key={idx}
                         style={{
-                          border: "1px solid #1E293B",
-                          background: "#111827",
+                          border: "1px solid var(--border-soft)",
+                          background: "var(--bg-surface)",
                           borderRadius: 10,
                           padding: 12,
                         }}
                       >
                         <p
                           style={{
-                            color: "#F1F5F9",
+                            color: "var(--text-primary)",
                             fontSize: 13,
                             fontWeight: 600,
                             margin: 0,
@@ -322,7 +329,13 @@ function AIAnalysis() {
                         >
                           {item.name}
                         </p>
-                        <p style={{ color: "#94A3B8", fontSize: 12, margin: "6px 0 0" }}>
+                        <p
+                          style={{
+                            color: "var(--text-muted)",
+                            fontSize: 12,
+                            margin: "6px 0 0",
+                          }}
+                        >
                           {item.text}
                         </p>
                       </div>
@@ -333,10 +346,10 @@ function AIAnalysis() {
 
               <InsightCard
                 title="Threat Classification"
-                icon={<FaShieldAlt color="#10B981" size={14} />}
+                icon={<FaShieldAlt color="var(--accent-green)" size={14} />}
               >
                 {normalizedClassifications.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                  <p style={{ color: "var(--text-faint)", fontSize: 13, margin: 0 }}>
                     No classification data available.
                   </p>
                 ) : (
@@ -345,8 +358,8 @@ function AIAnalysis() {
                       <div
                         key={idx}
                         style={{
-                          border: "1px solid #1E293B",
-                          background: "#111827",
+                          border: "1px solid var(--border-soft)",
+                          background: "var(--bg-surface)",
                           borderRadius: 10,
                           padding: 12,
                         }}
@@ -355,7 +368,7 @@ function AIAnalysis() {
                           <div>
                             <p
                               style={{
-                                color: "#F1F5F9",
+                                color: "var(--text-primary)",
                                 fontSize: 13,
                                 fontWeight: 600,
                                 margin: 0,
@@ -363,11 +376,17 @@ function AIAnalysis() {
                             >
                               {item.name}
                             </p>
-                            <p style={{ color: "#64748B", fontSize: 12, margin: "4px 0 0" }}>
+                            <p
+                              style={{
+                                color: "var(--text-faint)",
+                                fontSize: 12,
+                                margin: "4px 0 0",
+                              }}
+                            >
                               {item.threatType}
                             </p>
                           </div>
-                          <FaExclamationTriangle color="#F59E0B" size={14} />
+                          <FaExclamationTriangle color="var(--accent-orange)" size={14} />
                         </div>
                       </div>
                     ))}

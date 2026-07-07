@@ -8,9 +8,10 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: linear-gradient(180deg, #081028 0%, #0b1733 100%);
-  border-right: 1px solid rgba(59, 130, 246, 0.08);
-  box-shadow: 8px 0 30px rgba(2, 6, 23, 0.24);
+  background: linear-gradient(180deg, var(--bg-surface-2) 0%, var(--bg-surface) 100%);
+  border-right: 1px solid var(--border-color);
+  box-shadow: 8px 0 30px rgba(2, 6, 23, 0.14);
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .sidebar__top {
@@ -20,7 +21,7 @@
 
 .sidebar-header {
   padding: 24px 20px 18px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .sidebar-logo {
@@ -36,27 +37,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3b82f6;
+  color: var(--accent-blue);
   font-size: 20px;
   background: linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(37, 99, 235, 0.08));
   border: 1px solid rgba(59, 130, 246, 0.22);
-  box-shadow:
-    0 8px 20px rgba(15, 23, 42, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
 }
 
 .sidebar-logo__text h2 {
   margin: 0;
   font-size: 17px;
   font-weight: 700;
-  color: #3b82f6;
+  color: var(--accent-blue);
   letter-spacing: 0.01em;
 }
 
 .sidebar-logo__text p {
   margin: 4px 0 0;
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-faint);
   letter-spacing: 0.03em;
 }
 
@@ -81,21 +80,21 @@
   gap: 14px;
   padding: 13px 14px;
   border-radius: 14px;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   text-decoration: none;
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
 .sidebar-menu__item:hover {
-  background: rgba(30, 41, 59, 0.85);
-  color: #f8fafc;
+  background: var(--bg-hover);
+  color: var(--text-primary);
   transform: translateX(4px);
 }
 
 .sidebar-menu__item.active {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.16), rgba(59, 130, 246, 0.05));
-  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--accent-blue);
   border: 1px solid rgba(59, 130, 246, 0.14);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -108,7 +107,7 @@
   bottom: 10px;
   width: 4px;
   border-radius: 0 6px 6px 0;
-  background: #3b82f6;
+  background: var(--accent-blue);
 }
 
 .sidebar-menu__icon {
@@ -129,7 +128,7 @@
 
 .sidebar-footer {
   padding: 16px 14px 20px;
-  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  border-top: 1px solid var(--border-color);
 }
 
 .sidebar-logout {
