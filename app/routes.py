@@ -589,9 +589,10 @@ def login_user(
         db.add(audit_log)
         db.commit()
 
-        return {
-            "message": "User not found"
-        }
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
 
     if not verify_password(
         form_data.password,
@@ -606,9 +607,10 @@ def login_user(
         db.add(audit_log)
         db.commit()
 
-        return {
-            "message": "Invalid password"
-        }
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid password"
+        )
 
     access_token = create_access_token(
         {
@@ -629,6 +631,7 @@ def login_user(
         "access_token": access_token,
         "token_type": "bearer"
     }
+
 
 @router.get("/test-token")
 def test_token(
@@ -656,6 +659,29 @@ def get_audit_logs(
     )
 
     return logs
+
+@router.get("/users/me")
+def get_logged_in_user(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user = (
+        db.query(User)
+        .filter(User.username == current_user["username"])
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    return {
+        "username": user.username,
+        "email": user.email,
+        "role": user.role
+    }
 
 @router.get("/users")
 def get_users(
