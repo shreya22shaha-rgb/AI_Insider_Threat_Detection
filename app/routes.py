@@ -18,6 +18,8 @@ from .models import EmployeeActivity
 from .audit_models import AuditLog
 from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
 
+from .ai_engine import calculate_risk_score
+
 router = APIRouter()
 
 def calculate_risk(activity_type):
@@ -257,36 +259,34 @@ def dynamic_risk_score(
 
     activities = db.query(EmployeeActivity).all()
 
-    risk_weights = {
-        "USB File Transfer": 15,
-        "Admin Privilege Change": 20,
-        "Multiple Failed Login": 10,
-        "File Download": 5,
-        "Email Access": 2,
-        "System Login": 1
-    }
-
-    employee_scores = {}
+    employee_activities = {}
 
     for activity in activities:
 
-        score = risk_weights.get(
-            activity.activity_type,
-            1
-        )
+        if activity.employee_name not in employee_activities:
+            employee_activities[activity.employee_name] = []
 
-        if activity.employee_name not in employee_scores:
-            employee_scores[activity.employee_name] = 0
-
-        employee_scores[activity.employee_name] += score
+        employee_activities[activity.employee_name].append(activity)
 
     result = []
 
-    for employee, score in employee_scores.items():
+    for employee, activity_list in employee_activities.items():
+
+        score = calculate_risk_score(activity_list)
+
+        if score >= 80:
+            level = "Critical"
+        elif score >= 50:
+            level = "High"
+        elif score >= 20:
+            level = "Medium"
+        else:
+            level = "Low"
 
         result.append({
             "employee_name": employee,
-            "risk_score": score
+            "risk_score": score,
+            "risk_level": level
         })
 
     result.sort(

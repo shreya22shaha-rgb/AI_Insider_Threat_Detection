@@ -96,3 +96,30 @@ def security_score(total_users, high_risk):
         score = 0
 
     return score
+
+# -----------------------------------
+# AI Risk Score Engine
+# -----------------------------------
+
+ACTIVITY_SCORES = {
+    "Admin Privilege Change": 40,
+    "USB File Transfer": 30,
+    "Suspicious Script Execution": 30,
+    "Database Access": 25,
+    "Multiple Failed Logins": 20,
+    "File Download": 15,
+    "Email Access": 8,
+    "VPN Login": 5,
+    "File Upload": 5,
+    "System Login": 2
+}
+
+
+def calculate_risk_score(activities):
+
+    total_score = 0
+
+    for activity in activities:
+        total_score += ACTIVITY_SCORES.get(activity.activity_type, 0)
+
+    return total_score
