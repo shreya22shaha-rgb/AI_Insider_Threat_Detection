@@ -20,7 +20,8 @@ from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
 
 from .ai_engine import (
     calculate_risk_score,
-    calculate_activity_breakdown
+    calculate_activity_breakdown,
+    generate_recommendations
 )
 
 router = APIRouter()
@@ -264,6 +265,7 @@ def dynamic_risk_score(
 
     employee_activities = {}
 
+    # Group activities employee-wise
     for activity in activities:
 
         if activity.employee_name not in employee_activities:
@@ -273,6 +275,7 @@ def dynamic_risk_score(
 
     result = []
 
+    # Calculate AI Risk Score for each employee
     for employee, activity_list in employee_activities.items():
 
         score = calculate_risk_score(activity_list)
@@ -286,13 +289,27 @@ def dynamic_risk_score(
         else:
             level = "Low"
 
-        breakdown = calculate_activity_breakdown(activity_list)
+        breakdown = calculate_activity_breakdown(
+            activity_list
+        )
+
+        recommendations = generate_recommendations(
+            level,
+            activity_list
+        )
 
         result.append({
+
             "employee_name": employee,
+
             "risk_score": score,
+
             "risk_level": level,
-            "contributing_activities": breakdown
+
+            "contributing_activities": breakdown,
+
+            "recommendations": recommendations
+
         })
 
     result.sort(

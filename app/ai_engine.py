@@ -149,3 +149,69 @@ def calculate_activity_breakdown(activities):
         breakdown[activity_name]["score"] += score
 
     return list(breakdown.values())
+
+# -----------------------------------
+# AI Recommendation Engine
+# -----------------------------------
+
+def generate_recommendations(risk_level, activities):
+
+    recommendations = []
+
+    if risk_level == "Critical":
+
+        recommendations.extend([
+            "Disable USB access immediately",
+            "Lock user account temporarily",
+            "Notify Security Team",
+            "Force password reset",
+            "Review all recent activities"
+        ])
+
+    elif risk_level == "High":
+
+        recommendations.extend([
+            "Monitor employee closely",
+            "Enable Multi-Factor Authentication",
+            "Review recent downloads"
+        ])
+
+    elif risk_level == "Medium":
+
+        recommendations.extend([
+            "Increase activity monitoring",
+            "Review login history"
+        ])
+
+    else:
+
+        recommendations.append(
+            "No immediate action required"
+        )
+
+    # Activity-specific recommendations
+
+    activity_names = [
+        activity.activity_type
+        for activity in activities
+    ]
+
+    if "USB File Transfer" in activity_names:
+
+        recommendations.append(
+            "Review USB device usage"
+        )
+
+    if "Admin Privilege Change" in activity_names:
+
+        recommendations.append(
+            "Verify privilege changes with administrator"
+        )
+
+    if "File Download" in activity_names:
+
+        recommendations.append(
+            "Check downloaded files for sensitive data"
+        )
+
+    return recommendations
