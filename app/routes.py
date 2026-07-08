@@ -18,7 +18,10 @@ from .models import EmployeeActivity
 from .audit_models import AuditLog
 from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
 
-from .ai_engine import calculate_risk_score
+from .ai_engine import (
+    calculate_risk_score,
+    calculate_activity_breakdown
+)
 
 router = APIRouter()
 
@@ -283,10 +286,13 @@ def dynamic_risk_score(
         else:
             level = "Low"
 
+        breakdown = calculate_activity_breakdown(activity_list)
+
         result.append({
             "employee_name": employee,
             "risk_score": score,
-            "risk_level": level
+            "risk_level": level,
+            "contributing_activities": breakdown
         })
 
     result.sort(

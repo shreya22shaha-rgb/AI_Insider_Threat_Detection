@@ -123,3 +123,29 @@ def calculate_risk_score(activities):
         total_score += ACTIVITY_SCORES.get(activity.activity_type, 0)
 
     return total_score
+
+# -----------------------------------
+# Explainable AI - Activity Breakdown
+# -----------------------------------
+
+def calculate_activity_breakdown(activities):
+
+    breakdown = {}
+
+    for activity in activities:
+
+        activity_name = activity.activity_type
+        score = ACTIVITY_SCORES.get(activity_name, 0)
+
+        if activity_name not in breakdown:
+
+            breakdown[activity_name] = {
+                "activity": activity_name,
+                "count": 0,
+                "score": 0
+            }
+
+        breakdown[activity_name]["count"] += 1
+        breakdown[activity_name]["score"] += score
+
+    return list(breakdown.values())
