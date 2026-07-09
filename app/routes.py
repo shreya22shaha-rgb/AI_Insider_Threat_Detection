@@ -21,9 +21,9 @@ from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
 from .ai_engine import (
     calculate_risk_score,
     calculate_activity_breakdown,
-    generate_recommendations
+    generate_recommendations,
+    detect_behavior_anomaly
 )
-
 router = APIRouter()
 
 def calculate_risk(activity_type):
@@ -298,6 +298,11 @@ def dynamic_risk_score(
             activity_list
         )
 
+        anomaly = detect_behavior_anomaly(
+            score,
+            breakdown
+        )
+
         result.append({
 
             "employee_name": employee,
@@ -308,7 +313,9 @@ def dynamic_risk_score(
 
             "contributing_activities": breakdown,
 
-            "recommendations": recommendations
+            "recommendations": recommendations,
+
+            "behavior_analysis": anomaly
 
         })
 
@@ -318,6 +325,7 @@ def dynamic_risk_score(
     )
 
     return result
+
 
 @router.get("/threat-alerts")
 def threat_alerts(

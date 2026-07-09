@@ -215,3 +215,49 @@ def generate_recommendations(risk_level, activities):
         )
 
     return recommendations
+
+# -----------------------------------
+# Behavioral Anomaly Detection
+# -----------------------------------
+
+def detect_behavior_anomaly(risk_score, breakdown):
+
+    anomaly_points = 0
+    reasons = []
+
+    if risk_score >= 120:
+        anomaly_points += 1
+        reasons.append("Very high risk score")
+
+    for item in breakdown:
+
+        if item["activity"] == "USB File Transfer" and item["count"] >= 5:
+            anomaly_points += 1
+            reasons.append("Excessive USB activity")
+
+        if item["activity"] == "Admin Privilege Change" and item["count"] >= 2:
+            anomaly_points += 1
+            reasons.append("Multiple privilege changes")
+
+        if item["activity"] == "Suspicious Script Execution":
+            anomaly_points += 1
+            reasons.append("Suspicious script executed")
+
+        if item["activity"] == "Database Access" and item["count"] >= 2:
+            anomaly_points += 1
+            reasons.append("Repeated database access")
+
+    if anomaly_points >= 3:
+        status = "Behavioral Anomaly"
+
+    elif anomaly_points >= 1:
+        status = "Suspicious"
+
+    else:
+        status = "Normal"
+
+    return {
+        "status": status,
+        "score": anomaly_points,
+        "reasons": reasons
+    }
