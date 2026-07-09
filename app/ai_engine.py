@@ -329,3 +329,88 @@ def predict_future_threat(risk_score):
         "confidence": confidence
 
     }
+
+# -----------------------------------
+# Organization Security Health Score
+# -----------------------------------
+
+def calculate_security_health(employee_results):
+
+    total_employees = len(employee_results)
+
+    critical = 0
+    high = 0
+    medium = 0
+    low = 0
+
+    for employee in employee_results:
+
+        level = employee["risk_level"]
+
+        if level == "Critical":
+            critical += 1
+
+        elif level == "High":
+            high += 1
+
+        elif level == "Medium":
+            medium += 1
+
+        else:
+            low += 1
+
+    score = 100
+
+    score -= critical * 15
+    score -= high * 10
+    score -= medium * 5
+
+    if score < 0:
+        score = 0
+
+    if score >= 90:
+        status = "Excellent"
+
+    elif score >= 75:
+        status = "Good"
+
+    elif score >= 50:
+        status = "Warning"
+
+    else:
+        status = "Critical"
+
+    if critical > 0:
+        recommendation = (
+            "Immediately investigate critical employees."
+        )
+
+    elif high > 0:
+        recommendation = (
+            "Monitor high-risk employees closely."
+        )
+
+    else:
+        recommendation = (
+            "Security posture is stable."
+        )
+
+    return {
+
+        "security_score": score,
+
+        "security_status": status,
+
+        "total_employees": total_employees,
+
+        "critical_employees": critical,
+
+        "high_risk_employees": high,
+
+        "medium_risk_employees": medium,
+
+        "low_risk_employees": low,
+
+        "recommendation": recommendation
+
+    }

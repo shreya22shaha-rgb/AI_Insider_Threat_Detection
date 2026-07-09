@@ -24,8 +24,10 @@ from .ai_engine import (
     calculate_activity_breakdown,
     generate_recommendations,
     detect_behavior_anomaly,
-    predict_future_threat
+    predict_future_threat,
+    calculate_security_health
 )
+
 router = APIRouter()
 
 def calculate_risk(activity_type):
@@ -258,8 +260,8 @@ def employee_risk_score(db: Session = Depends(get_db)):
 
     return result
 
-@router.get("/dynamic-risk-score")
-def dynamic_risk_score(
+@router.get("/security-health-score")
+def security_health_score(
     db: Session = Depends(get_db)
 ):
 
@@ -267,7 +269,7 @@ def dynamic_risk_score(
 
     employee_activities = {}
 
-    # Group activities employee-wise
+    # Group activities by employee
     for activity in activities:
 
         if activity.employee_name not in employee_activities:
@@ -275,9 +277,9 @@ def dynamic_risk_score(
 
         employee_activities[activity.employee_name].append(activity)
 
-    result = []
+    employee_results = []
 
-    # Calculate AI Risk Score for each employee
+    # Calculate risk level for each employee
     for employee, activity_list in employee_activities.items():
 
         score = calculate_risk_score(activity_list)
@@ -291,49 +293,14 @@ def dynamic_risk_score(
         else:
             level = "Low"
 
-        breakdown = calculate_activity_breakdown(
-            activity_list
-        )
-
-        recommendations = generate_recommendations(
-            level,
-            activity_list
-        )
-
-        anomaly = detect_behavior_anomaly(
-            score,
-            breakdown
-        )
-
-        prediction = predict_future_threat(
-            score
-        )
-
-        result.append({
-
+        employee_results.append({
             "employee_name": employee,
-
-            "risk_score": score,
-
-            "risk_level": level,
-
-            "contributing_activities": breakdown,
-
-            "recommendations": recommendations,
-
-            "behavior_analysis": anomaly,
-
-            "future_prediction": prediction
-
+            "risk_level": level
         })
 
-    result.sort(
-        key=lambda x: x["risk_score"],
-        reverse=True
-    )
+    health = calculate_security_health(employee_results)
 
-    return result
-
+    return health
 
 @router.get("/threat-alerts")
 def threat_alerts(
