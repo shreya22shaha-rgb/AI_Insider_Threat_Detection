@@ -414,3 +414,41 @@ def calculate_security_health(employee_results):
         "recommendation": recommendation
 
     }
+
+# -----------------------------------
+# Executive AI Summary
+# -----------------------------------
+
+def generate_executive_summary(health):
+
+    summary = (
+        f"The organization currently has a "
+        f"{health['security_status']} security posture "
+        f"with a security score of "
+        f"{health['security_score']}/100. "
+    )
+
+    if health["critical_employees"] > 0:
+
+        summary += (
+            f"{health['critical_employees']} critical-risk "
+            f"employees require immediate investigation. "
+        )
+
+    if health["high_risk_employees"] > 0:
+
+        summary += (
+            f"{health['high_risk_employees']} high-risk "
+            f"employees should be monitored closely. "
+        )
+
+    if health["medium_risk_employees"] > 0:
+
+        summary += (
+            f"{health['medium_risk_employees']} medium-risk "
+            f"employees continue under observation. "
+        )
+
+    summary += health["recommendation"]
+
+    return summary

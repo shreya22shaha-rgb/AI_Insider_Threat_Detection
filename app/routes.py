@@ -25,7 +25,8 @@ from .ai_engine import (
     generate_recommendations,
     detect_behavior_anomaly,
     predict_future_threat,
-    calculate_security_health
+    calculate_security_health,
+    generate_executive_summary
 )
 
 router = APIRouter()
@@ -713,3 +714,62 @@ def get_users(
         })
 
     return result
+
+@router.get("/executive-summary")
+def executive_summary(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    employee_activities = {}
+
+    # Group activities employee-wise
+    for activity in activities:
+
+        if activity.employee_name not in employee_activities:
+            employee_activities[activity.employee_name] = []
+
+        employee_activities[activity.employee_name].append(activity)
+
+    employee_results = []
+
+    # Calculate employee risk levels
+    for employee, activity_list in employee_activities.items():
+
+        score = calculate_risk_score(activity_list)
+
+        if score >= 80:
+            level = "Critical"
+
+        elif score >= 50:
+            level = "High"
+
+        elif score >= 20:
+            level = "Medium"
+
+        else:
+            level = "Low"
+
+        employee_results.append({
+            "employee_name": employee,
+            "risk_level": level
+        })
+
+    # Organization health
+    health = calculate_security_health(
+        employee_results
+    )
+
+    # AI Summary
+    summary = generate_executive_summary(
+        health
+    )
+
+    return {
+
+        "organization_health": health,
+
+        "executive_summary": summary
+
+    }
