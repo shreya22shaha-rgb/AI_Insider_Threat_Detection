@@ -773,3 +773,87 @@ def executive_summary(
         "executive_summary": summary
 
     }
+
+@router.get("/ai-dashboard")
+def ai_dashboard(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    employee_activities = {}
+
+    for activity in activities:
+
+        if activity.employee_name not in employee_activities:
+            employee_activities[activity.employee_name] = []
+
+        employee_activities[activity.employee_name].append(activity)
+
+    employee_results = []
+
+    for employee, activity_list in employee_activities.items():
+
+        score = calculate_risk_score(activity_list)
+
+        if score >= 80:
+            level = "Critical"
+        elif score >= 50:
+            level = "High"
+        elif score >= 20:
+            level = "Medium"
+        else:
+            level = "Low"
+
+        breakdown = calculate_activity_breakdown(activity_list)
+
+        recommendations = generate_recommendations(
+            level,
+            activity_list
+        )
+
+        anomaly = detect_behavior_anomaly(
+            score,
+            breakdown
+        )
+
+        prediction = predict_future_threat(
+            score
+        )
+
+        employee_results.append({
+
+            "employee_name": employee,
+
+            "risk_score": score,
+
+            "risk_level": level,
+
+            "future_prediction": prediction,
+
+            "behavior_analysis": anomaly,
+
+            "recommendations": recommendations
+
+        })
+
+    employee_results.sort(
+        key=lambda x: x["risk_score"],
+        reverse=True
+    )
+
+    health = calculate_security_health(employee_results)
+
+    summary = generate_executive_summary(
+        health
+    )
+
+    return {
+
+        "organization_health": health,
+
+        "executive_summary": summary,
+
+        "top_risky_employees": employee_results[:5]
+
+    }
