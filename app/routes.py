@@ -5,6 +5,12 @@ from datetime import date
 from .user_models import User
 from .user_schemas import UserCreate, UserResponse, UserLogin
 from fastapi.security import OAuth2PasswordRequestForm
+
+from .database import SessionLocal
+from .models import EmployeeActivity
+from .audit_models import AuditLog
+from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
+
 from .auth import (
     hash_password,
     verify_password,
@@ -13,16 +19,12 @@ from .auth import (
     require_role
 )
 
-from .database import SessionLocal
-from .models import EmployeeActivity
-from .audit_models import AuditLog
-from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
-
 from .ai_engine import (
     calculate_risk_score,
     calculate_activity_breakdown,
     generate_recommendations,
-    detect_behavior_anomaly
+    detect_behavior_anomaly,
+    predict_future_threat
 )
 router = APIRouter()
 
@@ -303,6 +305,10 @@ def dynamic_risk_score(
             breakdown
         )
 
+        prediction = predict_future_threat(
+            score
+        )
+
         result.append({
 
             "employee_name": employee,
@@ -315,7 +321,9 @@ def dynamic_risk_score(
 
             "recommendations": recommendations,
 
-            "behavior_analysis": anomaly
+            "behavior_analysis": anomaly,
+
+            "future_prediction": prediction
 
         })
 

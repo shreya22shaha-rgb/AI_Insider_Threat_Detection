@@ -261,3 +261,71 @@ def detect_behavior_anomaly(risk_score, breakdown):
         "score": anomaly_points,
         "reasons": reasons
     }
+
+# -----------------------------------
+# Threat Prediction Engine
+# -----------------------------------
+
+def predict_future_threat(risk_score):
+
+    if risk_score >= 120:
+
+        probability = 98
+
+    elif risk_score >= 80:
+
+        probability = 90
+
+    elif risk_score >= 50:
+
+        probability = 70
+
+    elif risk_score >= 20:
+
+        probability = 45
+
+    else:
+
+        probability = 20
+
+    if probability >= 85:
+
+        future_risk = "Critical"
+
+    elif probability >= 60:
+
+        future_risk = "High"
+
+    elif probability >= 30:
+
+        future_risk = "Medium"
+
+    else:
+
+        future_risk = "Low"
+
+    if probability >= 90:
+
+        confidence = "Very High"
+
+    elif probability >= 70:
+
+        confidence = "High"
+
+    elif probability >= 45:
+
+        confidence = "Medium"
+
+    else:
+
+        confidence = "Low"
+
+    return {
+
+        "prediction_probability": probability,
+
+        "predicted_risk": future_risk,
+
+        "confidence": confidence
+
+    }
