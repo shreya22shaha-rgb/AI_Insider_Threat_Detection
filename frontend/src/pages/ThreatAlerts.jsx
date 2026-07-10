@@ -1,9 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import "../styles/Dashboard.css";
 import api from "../services/api";
-import { FaBell, FaEye, FaSearch, FaTimes } from "react-icons/fa";
+import {
+  FaBell,
+  FaEye,
+  FaSearch,
+  FaTimes,
+  FaFileCsv,
+  FaFilePdf,
+} from "react-icons/fa";
 
 function getSeverityStyle(severity) {
   switch (severity?.toLowerCase()) {
@@ -151,6 +160,86 @@ function ThreatAlerts({ theme, toggleTheme }) {
     low: alertsWithId.filter((a) => a.risk_level?.toLowerCase() === "low").length,
   };
 
+  const exportToCSV = () => {
+    const headers = [
+      "Alert ID",
+      "Activity Type",
+      "Employee Name",
+      "Severity",
+      "Message",
+    ];
+
+    const rows = filtered.map((alert) => [
+      alert.alert_id ?? "",
+      alert.activity_type ?? "",
+      alert.employee_name ?? "",
+      alert.risk_level ?? "",
+      alert.display_message ?? "",
+    ]);
+
+    const csvContent = [
+      headers,
+      ...rows,
+    ]
+      .map((row) =>
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+
+    const csvWithBom = "\uFEFF" + csvContent;
+    const blob = new Blob([csvWithBom], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute("download", "threat-alerts-export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF("l", "mm", "a4");
+
+    doc.setFontSize(16);
+    doc.text("Threat Alerts Export Report", 14, 16);
+
+    doc.setFontSize(10);
+    doc.text(`Total Exported Alerts: ${filtered.length}`, 14, 24);
+    doc.text(`Current Filter: ${filter}`, 90, 24);
+    doc.text(`Search Query: ${search || "None"}`, 150, 24);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [["Alert ID", "Activity Type", "Employee Name", "Severity", "Message"]],
+      body: filtered.map((alert) => [
+        alert.alert_id ?? "",
+        alert.activity_type ?? "",
+        alert.employee_name ?? "",
+        alert.risk_level ?? "",
+        alert.display_message ?? "",
+      ]),
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        overflow: "linebreak",
+      },
+      headStyles: {
+        fillColor: [30, 41, 59],
+      },
+      columnStyles: {
+        0: { cellWidth: 24 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 24 },
+        4: { cellWidth: 110 },
+      },
+    });
+
+    doc.save("threat-alerts-export.pdf");
+  };
+
   return (
     <>
       <Sidebar />
@@ -221,7 +310,7 @@ function ThreatAlerts({ theme, toggleTheme }) {
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               {[
                 { label: "TOTAL ALERTS", value: totalAlerts, color: "var(--accent-orange)" },
                 { label: "CRITICAL", value: criticalCount, color: "var(--accent-red)" },
@@ -284,30 +373,85 @@ function ThreatAlerts({ theme, toggleTheme }) {
             />
           </div>
 
-          <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-            {["All", "Critical", "High", "Medium", "Low"].map((f) => (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+              marginBottom: 20,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {["All", "Critical", "High", "Medium", "Low"].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  style={{
+                    background:
+                      filter === f
+                        ? "color-mix(in srgb, var(--accent-blue) 12%, transparent)"
+                        : "var(--bg-surface-2)",
+                    border: `1px solid ${
+                      filter === f ? "var(--accent-blue)" : "var(--border-color)"
+                    }`,
+                    color: filter === f ? "var(--accent-blue)" : "var(--text-faint)",
+                    borderRadius: 999,
+                    padding: "5px 14px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button
-                key={f}
-                onClick={() => setFilter(f)}
+                onClick={exportToCSV}
+                type="button"
                 style={{
-                  background:
-                    filter === f
-                      ? "color-mix(in srgb, var(--accent-blue) 12%, transparent)"
-                      : "var(--bg-surface-2)",
-                  border: `1px solid ${
-                    filter === f ? "var(--accent-blue)" : "var(--border-color)"
-                  }`,
-                  color: filter === f ? "var(--accent-blue)" : "var(--text-faint)",
-                  borderRadius: 999,
-                  padding: "5px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: "color-mix(in srgb, var(--accent-green) 14%, transparent)",
+                  color: "var(--accent-green)",
+                  border: "1px solid var(--accent-green)",
+                  borderRadius: 10,
+                  padding: "8px 14px",
                   fontSize: 12,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: "pointer",
                 }}
               >
-                {f}
+                <FaFileCsv size={14} />
+                Export CSV
               </button>
-            ))}
+
+              <button
+                onClick={exportToPDF}
+                type="button"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: "color-mix(in srgb, var(--accent-red) 14%, transparent)",
+                  color: "var(--accent-red)",
+                  border: "1px solid var(--accent-red)",
+                  borderRadius: 10,
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                <FaFilePdf size={14} />
+                Export PDF
+              </button>
+            </div>
           </div>
 
           {loading ? (
