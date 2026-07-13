@@ -26,7 +26,9 @@ from .ai_engine import (
     detect_behavior_anomaly,
     predict_future_threat,
     calculate_security_health,
-    generate_executive_summary
+    generate_executive_summary,
+    group_activities_by_employee,
+    get_risk_level
 )
 
 router = APIRouter()
@@ -261,6 +263,73 @@ def employee_risk_score(db: Session = Depends(get_db)):
 
     return result
 
+@router.get("/dynamic-risk-score")
+def dynamic_risk_score(
+    db: Session = Depends(get_db)
+):
+
+    activities = db.query(EmployeeActivity).all()
+
+    employee_activities = group_activities_by_employee(
+        activities
+    )
+
+    result = []
+
+    for employee, activity_list in employee_activities.items():
+
+        score = calculate_risk_score(
+            activity_list
+        )
+
+        level = get_risk_level(
+            score
+        )
+
+        breakdown = calculate_activity_breakdown(
+            activity_list
+        )
+
+        recommendations = generate_recommendations(
+            level,
+            activity_list
+        )
+
+        anomaly = detect_behavior_anomaly(
+            score,
+            breakdown
+        )
+
+        prediction = predict_future_threat(
+            score
+        )
+
+        result.append({
+
+            "employee_name": employee,
+
+            "risk_score": score,
+
+            "risk_level": level,
+
+            "contributing_activities": breakdown,
+
+            "recommendations": recommendations,
+
+            "behavior_analysis": anomaly,
+
+            "future_prediction": prediction
+
+        })
+
+    result.sort(
+        key=lambda x: x["risk_score"],
+        reverse=True
+    )
+
+    return result
+
+
 @router.get("/security-health-score")
 def security_health_score(
     db: Session = Depends(get_db)
@@ -268,38 +337,30 @@ def security_health_score(
 
     activities = db.query(EmployeeActivity).all()
 
-    employee_activities = {}
-
-    # Group activities by employee
-    for activity in activities:
-
-        if activity.employee_name not in employee_activities:
-            employee_activities[activity.employee_name] = []
-
-        employee_activities[activity.employee_name].append(activity)
+    employee_activities = group_activities_by_employee(
+        activities
+    )
 
     employee_results = []
 
-    # Calculate risk level for each employee
     for employee, activity_list in employee_activities.items():
 
-        score = calculate_risk_score(activity_list)
+        score = calculate_risk_score(
+            activity_list
+        )
 
-        if score >= 80:
-            level = "Critical"
-        elif score >= 50:
-            level = "High"
-        elif score >= 20:
-            level = "Medium"
-        else:
-            level = "Low"
+        level = get_risk_level(
+            score
+        )
 
         employee_results.append({
             "employee_name": employee,
             "risk_level": level
         })
 
-    health = calculate_security_health(employee_results)
+    health = calculate_security_health(
+        employee_results
+    )
 
     return health
 
@@ -722,46 +783,31 @@ def executive_summary(
 
     activities = db.query(EmployeeActivity).all()
 
-    employee_activities = {}
-
-    # Group activities employee-wise
-    for activity in activities:
-
-        if activity.employee_name not in employee_activities:
-            employee_activities[activity.employee_name] = []
-
-        employee_activities[activity.employee_name].append(activity)
+    employee_activities = group_activities_by_employee(
+        activities
+    )
 
     employee_results = []
 
-    # Calculate employee risk levels
     for employee, activity_list in employee_activities.items():
 
-        score = calculate_risk_score(activity_list)
+        score = calculate_risk_score(
+            activity_list
+        )
 
-        if score >= 80:
-            level = "Critical"
-
-        elif score >= 50:
-            level = "High"
-
-        elif score >= 20:
-            level = "Medium"
-
-        else:
-            level = "Low"
+        level = get_risk_level(
+            score
+        )
 
         employee_results.append({
             "employee_name": employee,
             "risk_level": level
         })
 
-    # Organization health
     health = calculate_security_health(
         employee_results
     )
 
-    # AI Summary
     summary = generate_executive_summary(
         health
     )
@@ -781,31 +827,25 @@ def ai_dashboard(
 
     activities = db.query(EmployeeActivity).all()
 
-    employee_activities = {}
-
-    for activity in activities:
-
-        if activity.employee_name not in employee_activities:
-            employee_activities[activity.employee_name] = []
-
-        employee_activities[activity.employee_name].append(activity)
+    employee_activities = group_activities_by_employee(
+        activities
+    )
 
     employee_results = []
 
     for employee, activity_list in employee_activities.items():
 
-        score = calculate_risk_score(activity_list)
+        score = calculate_risk_score(
+            activity_list
+        )
 
-        if score >= 80:
-            level = "Critical"
-        elif score >= 50:
-            level = "High"
-        elif score >= 20:
-            level = "Medium"
-        else:
-            level = "Low"
+        level = get_risk_level(
+            score
+        )
 
-        breakdown = calculate_activity_breakdown(activity_list)
+        breakdown = calculate_activity_breakdown(
+            activity_list
+        )
 
         recommendations = generate_recommendations(
             level,
@@ -842,7 +882,9 @@ def ai_dashboard(
         reverse=True
     )
 
-    health = calculate_security_health(employee_results)
+    health = calculate_security_health(
+        employee_results
+    )
 
     summary = generate_executive_summary(
         health

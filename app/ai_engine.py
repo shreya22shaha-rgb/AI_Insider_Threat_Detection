@@ -452,3 +452,38 @@ def generate_executive_summary(health):
     summary += health["recommendation"]
 
     return summary
+
+# -----------------------------------
+# Helper: Group Activities by Employee
+# -----------------------------------
+
+def group_activities_by_employee(activities):
+
+    employee_activities = {}
+
+    for activity in activities:
+
+        if activity.employee_name not in employee_activities:
+            employee_activities[activity.employee_name] = []
+
+        employee_activities[activity.employee_name].append(activity)
+
+    return employee_activities
+
+
+# -----------------------------------
+# Helper: Convert Score to Risk Level
+# -----------------------------------
+
+def get_risk_level(score):
+
+    if score >= 80:
+        return "Critical"
+
+    elif score >= 50:
+        return "High"
+
+    elif score >= 20:
+        return "Medium"
+
+    return "Low"
