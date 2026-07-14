@@ -306,348 +306,346 @@ function Reports({ theme, toggleTheme }) {
       <div className="dashboard-content">
         <Navbar user={currentUser} theme={theme} toggleTheme={toggleTheme} />
 
-        <div ref={reportRef}>
-          <div className="dashboard-header">
-            <div>
-              <h1 className="dashboard-title">Reports</h1>
-              <p className="dashboard-subtitle">
-                Analyze trends, compare severity levels, and review security reporting metrics.
-              </p>
-            </div>
-
-            <div className="dashboard-live-badge">
-              <span className="live-dot"></span>
-              REPORT CENTER
-            </div>
+        <div className="dashboard-header">
+          <div>
+            <h1 className="dashboard-title">Reports</h1>
+            <p className="dashboard-subtitle">
+              Analyze trends, compare severity levels, and review security reporting metrics.
+            </p>
           </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
-            <StatMini title="Trend Points" value={totalTrend} color="var(--accent-cyan)" />
-            <StatMini title="Threat Types" value={totalThreatTypes} color="var(--accent-orange)" />
-            <StatMini title="Activity Types" value={totalDates} color="var(--accent-green)" />
+          <div className="dashboard-live-badge">
+            <span className="live-dot"></span>
+            REPORT CENTER
           </div>
+        </div>
 
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+          <StatMini title="Trend Points" value={totalTrend} color="var(--accent-cyan)" />
+          <StatMini title="Threat Types" value={totalThreatTypes} color="var(--accent-orange)" />
+          <StatMini title="Activity Types" value={totalDates} color="var(--accent-green)" />
+        </div>
+
+        <div
+          style={{
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
           <div
             style={{
-              marginBottom: 20,
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
+              gap: 10,
               flexWrap: "wrap",
             }}
           >
-            <div
+            <label
+              htmlFor="report-date"
+              style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 600 }}
+            >
+              Select Date:
+            </label>
+
+            <input
+              id="report-date"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              style={{
+                background: "var(--bg-surface-2)",
+                border: "1px solid var(--border-color)",
+                color: "var(--text-primary)",
+                borderRadius: 8,
+                padding: "8px 12px",
+                fontSize: 13,
+              }}
+            />
+
+            <span style={{ color: "var(--text-faint)", fontSize: 12 }}>
+              Default test date: {DEFAULT_ACTIVITY_DATE}
+            </span>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              onClick={exportTrendCSV}
+              type="button"
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
-                flexWrap: "wrap",
+                gap: 8,
+                background: "rgba(56, 189, 248, 0.14)",
+                color: "var(--accent-cyan)",
+                border: "1px solid var(--accent-cyan)",
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
               }}
             >
-              <label
-                htmlFor="report-date"
-                style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 600 }}
+              <FaFileCsv size={14} />
+              Trend CSV
+            </button>
+
+            <button
+              onClick={exportThreatClassificationCSV}
+              type="button"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: "rgba(249, 115, 22, 0.14)",
+                color: "var(--accent-orange)",
+                border: "1px solid var(--accent-orange)",
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              <FaFileCsv size={14} />
+              Threat CSV
+            </button>
+
+            <button
+              onClick={exportActivitiesCSV}
+              type="button"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: "rgba(16, 185, 129, 0.14)",
+                color: "var(--accent-green)",
+                border: "1px solid var(--accent-green)",
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              <FaFileCsv size={14} />
+              Activity CSV
+            </button>
+
+            <button
+              onClick={exportAllReportsCSV}
+              type="button"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: "rgba(59, 130, 246, 0.14)",
+                color: "var(--accent-blue)",
+                border: "1px solid var(--accent-blue)",
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              <FaFileCsv size={14} />
+              Export All CSV
+            </button>
+
+            <button
+              onClick={exportReportsPDF}
+              type="button"
+              disabled={exportingPdf}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: "rgba(239, 68, 68, 0.14)",
+                color: "var(--accent-red)",
+                border: "1px solid var(--accent-red)",
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: exportingPdf ? "not-allowed" : "pointer",
+                opacity: exportingPdf ? 0.7 : 1,
+              }}
+            >
+              <FaFilePdf size={14} />
+              {exportingPdf ? "Exporting PDF..." : "Export PDF"}
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ color: "var(--text-faint)", textAlign: "center", padding: "40px 0" }}>
+            Loading reports...
+          </div>
+        ) : error ? (
+          <div
+            style={{
+              color: "var(--danger-text)",
+              background: "var(--bg-surface)",
+              border: "1px solid var(--danger-text)",
+              borderRadius: 10,
+              padding: 14,
+            }}
+          >
+            {error}
+          </div>
+        ) : (
+          <div ref={reportRef}>
+            <div style={{ marginBottom: 20 }}>
+              <ChartCard
+                title="Risk Trend Analysis"
+                subtitle="Current employee risk scores from backend"
+                icon={<FaChartLine color="var(--accent-cyan)" size={15} />}
               >
-                Select Date:
-              </label>
-
-              <input
-                id="report-date"
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                style={{
-                  background: "var(--bg-surface-2)",
-                  border: "1px solid var(--border-color)",
-                  color: "var(--text-primary)",
-                  borderRadius: 8,
-                  padding: "8px 12px",
-                  fontSize: 13,
-                }}
-              />
-
-              <span style={{ color: "var(--text-faint)", fontSize: 12 }}>
-                Default test date: {DEFAULT_ACTIVITY_DATE}
-              </span>
+                {trendChartData.length === 0 ? (
+                  <EmptyChartState message="No risk trend data available." height={320} />
+                ) : (
+                  <div style={{ width: "100%", height: 320, minWidth: 0, minHeight: 320 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trendChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+                        <XAxis dataKey="name" stroke={chartAxisColor} tick={{ fontSize: 11 }} />
+                        <YAxis
+                          stroke={chartAxisColor}
+                          tick={{ fontSize: 11 }}
+                          domain={[0, 100]}
+                        />
+                        <Tooltip contentStyle={tooltipStyle} wrapperStyle={{ outline: "none" }} />
+                        <Legend wrapperStyle={{ fontSize: 11, color: "var(--text-faint)" }} />
+                        <Line
+                          type="monotone"
+                          dataKey="score"
+                          name="Current Score"
+                          stroke="#38BDF8"
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: "#38BDF8" }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="previous"
+                          name="Previous Score"
+                          stroke="#F59E0B"
+                          strokeWidth={2}
+                          dot={{ r: 3, fill: "#F59E0B" }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </ChartCard>
             </div>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                onClick={exportTrendCSV}
-                type="button"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "color-mix(in srgb, var(--accent-cyan) 14%, transparent)",
-                  color: "var(--accent-cyan)",
-                  border: "1px solid var(--accent-cyan)",
-                  borderRadius: 10,
-                  padding: "8px 14px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+            <div className="reports-grid">
+              <ChartCard
+                title="Threat Classification"
+                subtitle="AI-detected threat categories across employees"
+                icon={<FaChartPie color="var(--accent-orange)" size={15} />}
               >
-                <FaFileCsv size={14} />
-                Trend CSV
-              </button>
+                {pieData.length === 0 ? (
+                  <EmptyChartState message="No threat classification data available." height={300} />
+                ) : (
+                  <div style={{ width: "100%", height: 300, minWidth: 0, minHeight: 300 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={70}
+                          outerRadius={110}
+                          paddingAngle={4}
+                          cornerRadius={4}
+                          isAnimationActive={false}
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                          ))}
 
-              <button
-                onClick={exportThreatClassificationCSV}
-                type="button"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "color-mix(in srgb, var(--accent-orange) 14%, transparent)",
-                  color: "var(--accent-orange)",
-                  border: "1px solid var(--accent-orange)",
-                  borderRadius: 10,
-                  padding: "8px 14px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                <FaFileCsv size={14} />
-                Threat CSV
-              </button>
+                          <Label
+                            position="center"
+                            content={({ viewBox }) => {
+                              if (!viewBox || viewBox.cx == null || viewBox.cy == null) return null;
+                              const { cx, cy } = viewBox;
+                              return (
+                                <g>
+                                  <text
+                                    x={cx}
+                                    y={cy - 6}
+                                    fill="var(--text-primary)"
+                                    textAnchor="middle"
+                                    dominantBaseline="central"
+                                    style={{ fontSize: 16, fontWeight: 700 }}
+                                  >
+                                    {totalThreats}
+                                  </text>
+                                  <text
+                                    x={cx}
+                                    y={cy + 12}
+                                    fill="var(--text-faint)"
+                                    textAnchor="middle"
+                                    dominantBaseline="central"
+                                    style={{ fontSize: 11 }}
+                                  >
+                                    total threats
+                                  </text>
+                                </g>
+                              );
+                            }}
+                          />
+                        </Pie>
 
-              <button
-                onClick={exportActivitiesCSV}
-                type="button"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "color-mix(in srgb, var(--accent-green) 14%, transparent)",
-                  color: "var(--accent-green)",
-                  border: "1px solid var(--accent-green)",
-                  borderRadius: 10,
-                  padding: "8px 14px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                <FaFileCsv size={14} />
-                Activity CSV
-              </button>
+                        <Tooltip contentStyle={tooltipStyle} wrapperStyle={{ outline: "none" }} />
+                        <Legend
+                          iconType="circle"
+                          wrapperStyle={{ fontSize: 11, color: "var(--text-faint)" }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </ChartCard>
 
-              <button
-                onClick={exportAllReportsCSV}
-                type="button"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "color-mix(in srgb, var(--accent-blue) 14%, transparent)",
-                  color: "var(--accent-blue)",
-                  border: "1px solid var(--accent-blue)",
-                  borderRadius: 10,
-                  padding: "8px 14px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+              <ChartCard
+                title="Activities by Date"
+                subtitle={`Activity volume for ${selectedDate}`}
+                icon={<FaChartBar color="var(--accent-green)" size={15} />}
               >
-                <FaFileCsv size={14} />
-                Export All CSV
-              </button>
-
-              <button
-                onClick={exportReportsPDF}
-                type="button"
-                disabled={exportingPdf}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "color-mix(in srgb, var(--accent-red) 14%, transparent)",
-                  color: "var(--accent-red)",
-                  border: "1px solid var(--accent-red)",
-                  borderRadius: 10,
-                  padding: "8px 14px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: exportingPdf ? "not-allowed" : "pointer",
-                  opacity: exportingPdf ? 0.7 : 1,
-                }}
-              >
-                <FaFilePdf size={14} />
-                {exportingPdf ? "Exporting PDF..." : "Export PDF"}
-              </button>
+                {activityBarData.length === 0 ? (
+                  <EmptyChartState
+                    message={`No activity-by-date data available for ${selectedDate}. Try 2026-06-22, 2026-06-12, or 2026-06-06.`}
+                    height={300}
+                  />
+                ) : (
+                  <div style={{ width: "100%", height: 300, minWidth: 0, minHeight: 300 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={activityBarData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+                        <XAxis dataKey="date" stroke={chartAxisColor} tick={{ fontSize: 11 }} />
+                        <YAxis
+                          stroke={chartAxisColor}
+                          tick={{ fontSize: 11 }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip contentStyle={tooltipStyle} wrapperStyle={{ outline: "none" }} />
+                        <Bar dataKey="count" fill="#10B981" radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </ChartCard>
             </div>
           </div>
-
-          {loading ? (
-            <div style={{ color: "var(--text-faint)", textAlign: "center", padding: "40px 0" }}>
-              Loading reports...
-            </div>
-          ) : error ? (
-            <div
-              style={{
-                color: "var(--danger-text)",
-                background: "var(--bg-surface)",
-                border: "1px solid var(--danger-text)",
-                borderRadius: 10,
-                padding: 14,
-              }}
-            >
-              {error}
-            </div>
-          ) : (
-            <>
-              <div style={{ marginBottom: 20 }}>
-                <ChartCard
-                  title="Risk Trend Analysis"
-                  subtitle="Current employee risk scores from backend"
-                  icon={<FaChartLine color="var(--accent-cyan)" size={15} />}
-                >
-                  {trendChartData.length === 0 ? (
-                    <EmptyChartState message="No risk trend data available." height={320} />
-                  ) : (
-                    <div style={{ width: "100%", height: 320, minWidth: 0, minHeight: 320 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={trendChartData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
-                          <XAxis dataKey="name" stroke={chartAxisColor} tick={{ fontSize: 11 }} />
-                          <YAxis
-                            stroke={chartAxisColor}
-                            tick={{ fontSize: 11 }}
-                            domain={[0, 100]}
-                          />
-                          <Tooltip contentStyle={tooltipStyle} wrapperStyle={{ outline: "none" }} />
-                          <Legend wrapperStyle={{ fontSize: 11, color: "var(--text-faint)" }} />
-                          <Line
-                            type="monotone"
-                            dataKey="score"
-                            name="Current Score"
-                            stroke="#38BDF8"
-                            strokeWidth={3}
-                            dot={{ r: 4, fill: "#38BDF8" }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="previous"
-                            name="Previous Score"
-                            stroke="#F59E0B"
-                            strokeWidth={2}
-                            dot={{ r: 3, fill: "#F59E0B" }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </ChartCard>
-              </div>
-
-              <div className="reports-grid">
-                <ChartCard
-                  title="Threat Classification"
-                  subtitle="AI-detected threat categories across employees"
-                  icon={<FaChartPie color="var(--accent-orange)" size={15} />}
-                >
-                  {pieData.length === 0 ? (
-                    <EmptyChartState message="No threat classification data available." height={300} />
-                  ) : (
-                    <div style={{ width: "100%", height: 300, minWidth: 0, minHeight: 300 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={pieData}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={70}
-                            outerRadius={110}
-                            paddingAngle={4}
-                            cornerRadius={4}
-                            isAnimationActive={false}
-                          >
-                            {pieData.map((entry, index) => (
-                              <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                            ))}
-
-                            <Label
-                              position="center"
-                              content={({ viewBox }) => {
-                                if (!viewBox || viewBox.cx == null || viewBox.cy == null) return null;
-                                const { cx, cy } = viewBox;
-                                return (
-                                  <g>
-                                    <text
-                                      x={cx}
-                                      y={cy - 6}
-                                      fill="var(--text-primary)"
-                                      textAnchor="middle"
-                                      dominantBaseline="central"
-                                      style={{ fontSize: 16, fontWeight: 700 }}
-                                    >
-                                      {totalThreats}
-                                    </text>
-                                    <text
-                                      x={cx}
-                                      y={cy + 12}
-                                      fill="var(--text-faint)"
-                                      textAnchor="middle"
-                                      dominantBaseline="central"
-                                      style={{ fontSize: 11 }}
-                                    >
-                                      total threats
-                                    </text>
-                                  </g>
-                                );
-                              }}
-                            />
-                          </Pie>
-
-                          <Tooltip contentStyle={tooltipStyle} wrapperStyle={{ outline: "none" }} />
-                          <Legend
-                            iconType="circle"
-                            wrapperStyle={{ fontSize: 11, color: "var(--text-faint)" }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </ChartCard>
-
-                <ChartCard
-                  title="Activities by Date"
-                  subtitle={`Activity volume for ${selectedDate}`}
-                  icon={<FaChartBar color="var(--accent-green)" size={15} />}
-                >
-                  {activityBarData.length === 0 ? (
-                    <EmptyChartState
-                      message={`No activity-by-date data available for ${selectedDate}. Try 2026-06-22, 2026-06-12, or 2026-06-06.`}
-                      height={300}
-                    />
-                  ) : (
-                    <div style={{ width: "100%", height: 300, minWidth: 0, minHeight: 300 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={activityBarData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
-                          <XAxis dataKey="date" stroke={chartAxisColor} tick={{ fontSize: 11 }} />
-                          <YAxis
-                            stroke={chartAxisColor}
-                            tick={{ fontSize: 11 }}
-                            allowDecimals={false}
-                          />
-                          <Tooltip contentStyle={tooltipStyle} wrapperStyle={{ outline: "none" }} />
-                          <Bar dataKey="count" fill="#10B981" radius={[8, 8, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </ChartCard>
-              </div>
-            </>
-          )}
-        </div>
+        )}
       </div>
     </>
   );

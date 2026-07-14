@@ -10,6 +10,7 @@ import {
   FaUserSecret,
   FaBolt,
   FaClipboardList,
+  FaListUl,
 } from "react-icons/fa";
 
 function riskColor(level) {
@@ -177,6 +178,35 @@ function EmployeeCard({ item }) {
 
       <ScoreBar score={item.score} color={color} />
 
+      {item.contributingActivities.length > 0 && (
+        <>
+          <SectionLabel icon={<FaListUl size={11} color="var(--accent-cyan)" />}>
+            Contributing Activities
+          </SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {item.contributingActivities.map((act, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                }}
+              >
+                <span style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                  {act.activity} <span style={{ color: "var(--text-faint)" }}>×{act.count}</span>
+                </span>
+                <span style={{ color, fontSize: 12, fontWeight: 700 }}>{act.score} pts</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       <SectionLabel icon={<FaUserSecret size={11} color="var(--accent-purple)" />}>
         Behavior Analysis
       </SectionLabel>
@@ -257,7 +287,9 @@ function EmployeeCard({ item }) {
 
 function AIAnalysis({ theme, toggleTheme }) {
   const [dashboard, setDashboard] = useState(null);
+  const [riskList, setRiskList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [riskLoading, setRiskLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -279,15 +311,28 @@ function AIAnalysis({ theme, toggleTheme }) {
         setLoading(false);
       }
     };
+
+    const fetchRiskScores = async () => {
+      setRiskLoading(true);
+      try {
+        const res = await api.get("/dynamic-risk-score");
+        setRiskList(Array.isArray(res.data) ? res.data : []);
+      } catch {
+        setRiskList([]);
+      } finally {
+        setRiskLoading(false);
+      }
+    };
+
     fetchAIDashboard();
+    fetchRiskScores();
   }, []);
 
   const orgHealth = dashboard?.organization_health || null;
   const executiveSummary = dashboard?.executive_summary || "";
-  const topRiskyEmployees = dashboard?.top_risky_employees || [];
 
   const normalizedEmployees = useMemo(() => {
-    return (Array.isArray(topRiskyEmployees) ? topRiskyEmployees : [])
+    return riskList
       .map((item, idx) => {
         const behavior = item.behavior_analysis || {};
         const prediction = item.future_prediction || {};
@@ -295,6 +340,9 @@ function AIAnalysis({ theme, toggleTheme }) {
           name: item.employee_name || `Employee ${idx + 1}`,
           score: item.risk_score ?? 0,
           riskLevel: item.risk_level || "Unknown",
+          contributingActivities: Array.isArray(item.contributing_activities)
+            ? item.contributing_activities
+            : [],
           recommendations: Array.isArray(item.recommendations) ? item.recommendations : [],
           behaviorStatus: behavior.status || "Unknown",
           behaviorScore: behavior.score ?? 0,
@@ -305,7 +353,7 @@ function AIAnalysis({ theme, toggleTheme }) {
         };
       })
       .sort((a, b) => b.score - a.score);
-  }, [topRiskyEmployees]);
+  }, [riskList]);
 
   const totalEmployees = normalizedEmployees.length;
   const highRiskCount = normalizedEmployees.filter((i) =>
@@ -364,7 +412,7 @@ function AIAnalysis({ theme, toggleTheme }) {
                 </h2>
               </div>
               <p style={{ color: "var(--text-faint)", fontSize: 12, margin: "6px 0 0" }}>
-                Organization health, executive summary, and top risky employees.
+                Organization health, executive summary, and employee risk breakdown.
               </p>
             </div>
 
@@ -409,7 +457,10 @@ function AIAnalysis({ theme, toggleTheme }) {
                     <h3 style={{ color: "var(--text-primary)", fontSize: 15.5, margin: 0, fontWeight: 700 }}>
                       Executive Summary
                     </h3>
-                    <Badge label={orgHealth?.security_score != null ? `${orgHealth.security_score}/100` : ""} color={orgColor} />
+                    <Badge
+                      label={orgHealth?.security_score != null ? `${orgHealth.security_score}/100` : ""}
+                      color={orgColor}
+                    />
                   </div>
                   <p style={{ color: "var(--text-muted)", fontSize: 13.5, margin: 0, lineHeight: 1.7 }}>
                     {executiveSummary}
@@ -417,17 +468,10 @@ function AIAnalysis({ theme, toggleTheme }) {
                 </div>
               )}
 
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 14,
-                }}
-              >
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                 <FaShieldAlt size={13} color="var(--accent-red)" />
                 <h3 style={{ color: "var(--text-primary)", fontSize: 14.5, margin: 0, fontWeight: 700 }}>
-                  Top Risky Employees
+                  Employee Risk Analysis
                 </h3>
               </div>
 
@@ -438,12 +482,16 @@ function AIAnalysis({ theme, toggleTheme }) {
                   gap: 18,
                 }}
               >
-                {normalizedEmployees.length === 0 ? (
+                {riskLoading ? (
+                  <p style={{ color: "var(--text-faint)", fontSize: 13, margin: 0 }}>
+                    Loading employee risk data...
+                  </p>
+                ) : normalizedEmployees.length === 0 ? (
                   <p style={{ color: "var(--text-faint)", fontSize: 13, margin: 0 }}>
                     No employee risk data available.
                   </p>
                 ) : (
-                  normalizedEmployees.slice(0, 6).map((item, idx) => (
+                  normalizedEmployees.map((item, idx) => (
                     <EmployeeCard key={idx} item={item} />
                   ))
                 )}

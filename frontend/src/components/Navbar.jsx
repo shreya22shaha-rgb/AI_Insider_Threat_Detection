@@ -11,6 +11,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
+const SEEN_ALERTS_STORAGE_KEY = "seenAlertIds";
+
 function getNotificationType(severity) {
   switch ((severity || "").toLowerCase()) {
     case "critical":
@@ -26,6 +28,27 @@ function getNotificationType(severity) {
   }
 }
 
+function loadSeenAlertIds() {
+  try {
+    const stored = localStorage.getItem(SEEN_ALERTS_STORAGE_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSeenAlertIds(idsSet) {
+  try {
+    localStorage.setItem(
+      SEEN_ALERTS_STORAGE_KEY,
+      JSON.stringify(Array.from(idsSet))
+    );
+  } catch {
+    // ignore storage errors
+  }
+}
+
 function Navbar({ user, theme, toggleTheme }) {
   const navigate = useNavigate();
   const notificationRef = useRef(null);
@@ -33,6 +56,7 @@ function Navbar({ user, theme, toggleTheme }) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [alertsLoading, setAlertsLoading] = useState(true);
+  const [seenAlertIds, setSeenAlertIds] = useState(() => loadSeenAlertIds());
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -81,18 +105,35 @@ function Navbar({ user, theme, toggleTheme }) {
   }, []);
 
   const notifications = useMemo(() => {
-    return alerts.slice(0, 6).map((item, index) => ({
-      id: `${item.employee_name || "unknown"}-${item.activity_type || "activity"}-${index}`,
-      title: item.alert || "Alert",
-      message: `${item.employee_name || "Unknown user"} • ${item.activity_type || "Unknown activity"}`,
-      time: "Recently",
-      type: getNotificationType(item.risk_level),
-      read: false,
-      severity: item.risk_level || "Unknown",
-    }));
-  }, [alerts]);
+    return alerts.map((item, index) => {
+      const id = `${item.employee_name || "unknown"}-${item.activity_type || "activity"}-${item.risk_level || "na"}-${item.alert || "na"}-${index}`;
 
-  const unreadCount = notifications.length;
+      return {
+        id,
+        title: item.alert || "Alert",
+        message: `${item.employee_name || "Unknown user"} • ${item.activity_type || "Unknown activity"}`,
+        time: "Recently",
+        type: getNotificationType(item.risk_level),
+        read: seenAlertIds.has(id),
+        severity: item.risk_level || "Unknown",
+      };
+    });
+  }, [alerts, seenAlertIds]);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((item) => !item.read).length,
+    [notifications]
+  );
+
+  const markAllAsSeen = () => {
+    if (notifications.length === 0) return;
+
+    const updated = new Set(seenAlertIds);
+    notifications.forEach((item) => updated.add(item.id));
+
+    setSeenAlertIds(updated);
+    saveSeenAlertIds(updated);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
@@ -103,7 +144,13 @@ function Navbar({ user, theme, toggleTheme }) {
   };
 
   const toggleNotificationPanel = () => {
-    setIsNotificationOpen((prev) => !prev);
+    setIsNotificationOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        markAllAsSeen();
+      }
+      return next;
+    });
   };
 
   return (
@@ -145,7 +192,9 @@ function Navbar({ user, theme, toggleTheme }) {
               <div className="notification-header">
                 <h3>Notifications</h3>
                 <span className="notification-count">
-                  {alertsLoading ? "Loading..." : `${unreadCount} unread`}
+                  {alertsLoading
+                    ? "Loading..."
+                    : `${notifications.length} total`}
                 </span>
               </div>
 
