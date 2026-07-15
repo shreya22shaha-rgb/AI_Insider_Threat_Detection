@@ -22,6 +22,48 @@ function riskColor(level) {
   return "#94A3B8";
 }
 
+function getRiskIcon(level) {
+  const l = (level || "").toLowerCase();
+  if (l === "critical" || l === "high") return <FaShieldAlt size={15} />;
+  if (l === "medium") return <FaBolt size={15} />;
+  if (l === "low") return <FaLightbulb size={15} />;
+  return <FaRobot size={15} />;
+}
+
+function getRecommendationColor(text, fallbackColor) {
+  const value = (text || "").toLowerCase();
+
+  if (
+    value.includes("immediately") ||
+    value.includes("urgent") ||
+    value.includes("critical") ||
+    value.includes("suspend") ||
+    value.includes("investigate")
+  ) {
+    return "#EF4444";
+  }
+
+  if (
+    value.includes("review") ||
+    value.includes("monitor") ||
+    value.includes("warning") ||
+    value.includes("check")
+  ) {
+    return "#F59E0B";
+  }
+
+  if (
+    value.includes("low") ||
+    value.includes("safe") ||
+    value.includes("normal") ||
+    value.includes("resolved")
+  ) {
+    return "#10B981";
+  }
+
+  return fallbackColor || "var(--accent-cyan)";
+}
+
 function StatBox({ label, value, color }) {
   return (
     <div
@@ -74,24 +116,42 @@ function Badge({ label, color }) {
 
 function ScoreBar({ score, max = 150, color }) {
   const pct = Math.min(100, (score / max) * 100);
+
   return (
-    <div style={{ marginTop: 6, marginBottom: 4 }}>
+    <div style={{ marginTop: 8, marginBottom: 6 }}>
       <div
         style={{
-          height: 6,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 6,
+        }}
+      >
+        <span style={{ color: "var(--text-faint)", fontSize: 11, fontWeight: 600 }}>
+          Risk Progress
+        </span>
+        <span style={{ color, fontSize: 11, fontWeight: 700 }}>
+          {Math.round(pct)}%
+        </span>
+      </div>
+
+      <div
+        style={{
+          height: 7,
           width: "100%",
           background: "var(--bg-surface)",
           borderRadius: 999,
           overflow: "hidden",
+          border: "1px solid var(--border-color)",
         }}
       >
         <div
           style={{
             height: "100%",
             width: `${pct}%`,
-            background: color,
+            background: `linear-gradient(90deg, ${color}, ${color}CC)`,
             borderRadius: 999,
-            transition: "width 0.4s ease",
+            transition: "width 0.5s ease",
           }}
         />
       </div>
@@ -119,20 +179,22 @@ function SectionLabel({ icon, children }) {
   );
 }
 
-function EmployeeCard({ item }) {
+function EmployeeCard({ item, index }) {
   const color = riskColor(item.riskLevel);
 
   return (
     <div
+      className="ai-employee-card"
       style={{
         background: "var(--bg-surface-2)",
         border: "1px solid var(--border-color)",
+        borderLeft: `4px solid ${color}`,
         borderRadius: 16,
         padding: "20px 20px 18px",
         position: "relative",
         overflow: "hidden",
         boxShadow: "var(--shadow-card)",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        animation: `aiCardIn 0.45s ease ${index * 0.08}s both`,
       }}
     >
       <div
@@ -146,24 +208,25 @@ function EmployeeCard({ item }) {
         }}
       />
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: "50%",
+              width: 42,
+              height: 42,
+              borderRadius: 12,
               background: `${color}18`,
+              border: `1px solid ${color}35`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color,
-              fontWeight: 800,
-              fontSize: 14,
+              flexShrink: 0,
             }}
           >
-            {item.name?.charAt(0)?.toUpperCase() || "?"}
+            {getRiskIcon(item.riskLevel)}
           </div>
+
           <div>
             <p style={{ color: "var(--text-primary)", fontSize: 15, fontWeight: 700, margin: 0 }}>
               {item.name}
@@ -173,6 +236,7 @@ function EmployeeCard({ item }) {
             </p>
           </div>
         </div>
+
         <Badge label={item.riskLevel} color={color} />
       </div>
 
@@ -252,19 +316,21 @@ function EmployeeCard({ item }) {
       </div>
       <div
         style={{
-          height: 5,
+          height: 6,
           width: "100%",
           background: "var(--bg-surface)",
           borderRadius: 999,
           overflow: "hidden",
+          border: "1px solid var(--border-color)",
         }}
       >
         <div
           style={{
             height: "100%",
             width: `${item.predictionProbability || 0}%`,
-            background: color,
+            background: `linear-gradient(90deg, ${color}, ${color}CC)`,
             borderRadius: 999,
+            transition: "width 0.45s ease",
           }}
         />
       </div>
@@ -274,11 +340,40 @@ function EmployeeCard({ item }) {
           <SectionLabel icon={<FaClipboardList size={11} color="var(--accent-green)" />}>
             Recommendations
           </SectionLabel>
-          <ul style={{ margin: 0, paddingLeft: 18, color: "var(--text-muted)", fontSize: 12, lineHeight: 1.6 }}>
-            {item.recommendations.map((r, i) => (
-              <li key={i}>{r}</li>
-            ))}
-          </ul>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {item.recommendations.map((r, i) => {
+              const recColor = getRecommendationColor(r, color);
+
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 8,
+                    padding: "9px 10px",
+                    borderRadius: 10,
+                    background: `${recColor}12`,
+                    border: `1px solid ${recColor}30`,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: recColor,
+                      marginTop: 5,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <p style={{ margin: 0, color: recColor, fontSize: 12.2, lineHeight: 1.55, fontWeight: 500 }}>
+                    {r}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
     </div>
@@ -420,7 +515,7 @@ function AIAnalysis({ theme, toggleTheme }) {
               <StatBox label="Employees" value={totalEmployees} color="var(--accent-cyan)" />
               <StatBox label="High Risk" value={highRiskCount} color="#F97316" />
               <StatBox label="Critical" value={criticalCount} color="#EF4444" />
-              <StatBox label="Org Status" value={orgStatus} color={orgColor} />
+              <StatBox label="Organization Status" value={orgStatus} color={orgColor} />
             </div>
           </div>
 
@@ -492,7 +587,7 @@ function AIAnalysis({ theme, toggleTheme }) {
                   </p>
                 ) : (
                   normalizedEmployees.map((item, idx) => (
-                    <EmployeeCard key={idx} item={item} />
+                    <EmployeeCard key={idx} item={item} index={idx} />
                   ))
                 )}
               </div>

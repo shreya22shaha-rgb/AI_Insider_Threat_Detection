@@ -17,6 +17,55 @@ body {
   align-items: center;
   padding: 20px;
   background: linear-gradient(135deg, #020617, #0f172a, #1e293b);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-bg-shape {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(70px);
+  opacity: 0.16;
+  pointer-events: none;
+  animation: floatGlow 10s ease-in-out infinite;
+}
+
+.shape-1 {
+  width: 260px;
+  height: 260px;
+  background: #2563eb;
+  top: 8%;
+  left: 12%;
+}
+
+.shape-2 {
+  width: 220px;
+  height: 220px;
+  background: #0ea5e9;
+  right: 12%;
+  bottom: 10%;
+  animation-delay: 2s;
+}
+
+.shape-3 {
+  width: 180px;
+  height: 180px;
+  background: #1d4ed8;
+  top: 55%;
+  left: 55%;
+  animation-delay: 4s;
+}
+
+@keyframes floatGlow {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(18px, -14px, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }
 
 .login-card {
@@ -29,6 +78,8 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
 }
 
 .login-card:hover {
@@ -37,10 +88,20 @@ body {
 }
 
 .logo {
-  text-align: center;
-  font-size: 55px;
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
 }
+
+.logo svg {
+  font-size: 64px;
+  color: #3b82f6;
+  position: relative;
+  animation: none;
+  transform: none;
+}
+
 
 .login-card h1 {
   color: #ffffff;
@@ -139,15 +200,6 @@ body {
   accent-color: #3b82f6;
 }
 
-.remember-row span {
-  color: #3b82f6;
-  cursor: pointer;
-}
-
-.remember-row span:hover {
-  text-decoration: underline;
-}
-
 .login-error {
   color: #f87171;
   font-size: 14px;
@@ -166,6 +218,7 @@ body {
   font-weight: bold;
   cursor: pointer;
   transition: 0.3s;
+  min-height: 52px;
 }
 
 .login-btn:hover {
@@ -178,8 +231,30 @@ body {
 }
 
 .login-btn:disabled {
-  opacity: 0.8;
+  opacity: 0.85;
   cursor: not-allowed;
+}
+
+.login-btn-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.login-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .security-badge {
@@ -200,6 +275,89 @@ body {
 .login-footer span {
   color: #3b82f6;
   font-weight: bold;
+}
+
+.forgot-password-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.forgot-password-btn:hover {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 11, 23, 0.72);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.forgot-modal {
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  padding: 28px 24px 22px;
+  text-align: center;
+}
+
+.forgot-modal-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  font-size: 24px;
+}
+
+.forgot-modal h2 {
+  margin: 0 0 10px;
+  color: #f8fafc;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.forgot-modal p {
+  margin: 0 0 22px;
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.forgot-modal-btn {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  color: white;
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.forgot-modal-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
 }
 
 @media (max-width: 500px) {

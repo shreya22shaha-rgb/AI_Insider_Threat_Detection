@@ -7,9 +7,13 @@ import {
   FaMapMarkerAlt,
   FaSearch,
   FaList,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import "../styles/Dashboard.css";
 import api from "../services/api";
+
+const ITEMS_PER_PAGE = 10;
 
 const statusColors = {
   success: { color: "#10B981", bg: "#10B98120", label: "Success" },
@@ -61,6 +65,7 @@ function ActivityLogs({ theme, toggleTheme }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [currentUser, setCurrentUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const stored = localStorage.getItem("loggedInUser");
@@ -104,12 +109,44 @@ function ActivityLogs({ theme, toggleTheme }) {
     });
   }, [activities, search, filter]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+
+  const paginatedLogs = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
+
   const totalLogs = activities.length;
 
   const criticalCount = activities.filter((a) => {
     const level = a.risk_level?.toLowerCase();
     return level === "critical" || level === "high";
   }).length;
+
+  const startItem = filtered.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, filtered.length);
+
+  const getVisiblePages = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    if (end - start < maxVisible - 1) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i += 1) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
 
   return (
     <>
@@ -317,7 +354,7 @@ function ActivityLogs({ theme, toggleTheme }) {
                       </div>
                     </td>
                   </tr>
-                ) : filtered.length === 0 ? (
+                ) : paginatedLogs.length === 0 ? (
                   <tr>
                     <td
                       colSpan={6}
@@ -332,8 +369,9 @@ function ActivityLogs({ theme, toggleTheme }) {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((log, idx) => {
+                  paginatedLogs.map((log, idx) => {
                     const riskStyle = getStatusStyle(log.risk_level || log.status);
+                    const sequenceNumber = (currentPage - 1) * ITEMS_PER_PAGE + idx + 1;
 
                     return (
                       <tr
@@ -357,7 +395,7 @@ function ActivityLogs({ theme, toggleTheme }) {
                             fontWeight: 700,
                           }}
                         >
-                          {log.log_id || log.activity_id || `LOG-${1000 + idx + 1}`}
+                          {log.log_id || log.activity_id || `LOG-${sequenceNumber}`}
                         </td>
 
                         <td style={{ padding: "14px" }}>
@@ -443,9 +481,96 @@ function ActivityLogs({ theme, toggleTheme }) {
           </div>
 
           {!loading && !error && (
-            <div style={{ marginTop: 16, color: "var(--text-secondary)", fontSize: 12 }}>
-              Showing <strong style={{ color: "var(--text-muted)" }}>{filtered.length}</strong> of{" "}
-              <strong style={{ color: "var(--text-muted)" }}>{totalLogs}</strong> logs
+            <div
+              style={{
+                marginTop: 18,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div style={{ color: "var(--text-secondary)", fontSize: 12 }}>
+                Showing <strong style={{ color: "var(--text-muted)" }}>{startItem}</strong>–
+                <strong style={{ color: "var(--text-muted)" }}>{endItem}</strong> of{" "}
+                <strong style={{ color: "var(--text-muted)" }}>{filtered.length}</strong> filtered logs
+              </div>
+
+              {filtered.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "8px 12px",
+                      borderRadius: 10,
+                      border: "1px solid var(--border-color)",
+                      background: "var(--bg-surface-2)",
+                      color: currentPage === 1 ? "var(--text-faint)" : "var(--text-primary)",
+                      cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                      opacity: currentPage === 1 ? 0.6 : 1,
+                    }}
+                  >
+                    <FaChevronLeft size={11} />
+                    Prev
+                  </button>
+
+                  {getVisiblePages().map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      style={{
+                        minWidth: 38,
+                        height: 38,
+                        borderRadius: 10,
+                        border: `1px solid ${
+                          currentPage === page ? "var(--accent-cyan)" : "var(--border-color)"
+                        }`,
+                        background:
+                          currentPage === page
+                            ? "color-mix(in srgb, var(--accent-cyan) 12%, transparent)"
+                            : "var(--bg-surface-2)",
+                        color:
+                          currentPage === page ? "var(--accent-cyan)" : "var(--text-primary)",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "8px 12px",
+                      borderRadius: 10,
+                      border: "1px solid var(--border-color)",
+                      background: "var(--bg-surface-2)",
+                      color:
+                        currentPage === totalPages ? "var(--text-faint)" : "var(--text-primary)",
+                      cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                      opacity: currentPage === totalPages ? 0.6 : 1,
+                    }}
+                  >
+                    Next
+                    <FaChevronRight size={11} />
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

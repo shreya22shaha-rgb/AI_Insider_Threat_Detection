@@ -5,6 +5,7 @@ import {
   FaShieldAlt,
   FaChartLine,
   FaHeartbeat,
+  FaSyncAlt,
 } from "react-icons/fa";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -19,6 +20,20 @@ function riskColor(level) {
   if (l === "medium") return "#F59E0B";
   if (l === "low") return "#10B981";
   return "#94A3B8";
+}
+
+function getRelativeLastUpdated(lastUpdated) {
+  if (!lastUpdated) return "Not updated yet";
+  const diffSeconds = Math.floor((Date.now() - lastUpdated) / 1000);
+
+  if (diffSeconds < 10) return "Just now";
+  if (diffSeconds < 60) return `${diffSeconds}s ago`;
+
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  return `${diffHours}h ago`;
 }
 
 function SecurityHealthCard({ health, loading }) {
@@ -39,6 +54,7 @@ function SecurityHealthCard({ health, loading }) {
       style={{
         background: `linear-gradient(120deg, ${color}10, var(--bg-surface-2) 65%)`,
         border: `1px solid ${color}35`,
+        borderLeft: `5px solid ${color}`,
         borderRadius: 18,
         padding: 24,
         marginBottom: 24,
@@ -80,6 +96,7 @@ function SecurityHealthCard({ health, loading }) {
               {loading ? "…" : score}
             </span>
           </div>
+
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <FaHeartbeat color={color} size={14} />
@@ -87,6 +104,7 @@ function SecurityHealthCard({ health, loading }) {
                 Security Health
               </h3>
             </div>
+
             <span
               style={{
                 display: "inline-block",
@@ -150,8 +168,10 @@ function Dashboard({ theme, toggleTheme }) {
   const [healthData, setHealthData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [healthLoading, setHealthLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(Date.now());
 
   useEffect(() => {
     const storedUser = localStorage.getItem("loggedInUser");
@@ -160,30 +180,36 @@ function Dashboard({ theme, toggleTheme }) {
     }
   }, []);
 
-  useEffect(() => {
-    api
-      .get("/dashboard")
-      .then((response) => {
-        setDashboardData(response.data || {});
-      })
-      .catch(() => {
-        setError("Failed to load dashboard data.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+  const fetchDashboardData = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+      setHealthLoading(true);
+    }
 
-    api
-      .get("/security-health-score")
-      .then((response) => {
-        setHealthData(response.data || {});
-      })
-      .catch(() => {
-        setHealthData(null);
-      })
-      .finally(() => {
-        setHealthLoading(false);
-      });
+    setError("");
+
+    try {
+      const [dashboardResponse, healthResponse] = await Promise.all([
+        api.get("/dashboard"),
+        api.get("/security-health-score"),
+      ]);
+
+      setDashboardData(dashboardResponse.data || {});
+      setHealthData(healthResponse.data || {});
+      setLastUpdated(Date.now());
+    } catch {
+      setError("Failed to load dashboard data.");
+    } finally {
+      setLoading(false);
+      setHealthLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
   }, []);
 
   const totalActivities =
@@ -201,33 +227,37 @@ function Dashboard({ theme, toggleTheme }) {
       title: "Total Activities",
       value: totalActivities,
       trend: "+12%",
-      trendType: "positive",
+      trendType: "up",
       icon: <FaUsers />,
       accent: "blue",
+      riskLevel: "low",
     },
     {
       title: "High Risk",
       value: highRisk,
       trend: "+4%",
-      trendType: "negative",
+      trendType: "down",
       icon: <FaExclamationTriangle />,
       accent: "red",
+      riskLevel: "critical",
     },
     {
       title: "Medium Risk",
       value: mediumRisk,
       trend: "+2.1%",
-      trendType: "negative",
+      trendType: "down",
       icon: <FaShieldAlt />,
-      accent: "green",
+      accent: "yellow",
+      riskLevel: "medium",
     },
     {
       title: "Low Risk",
       value: lowRisk,
       trend: "+1.8%",
-      trendType: "positive",
+      trendType: "up",
       icon: <FaChartLine />,
-      accent: "cyan",
+      accent: "green",
+      riskLevel: "low",
     },
   ];
 
@@ -236,7 +266,12 @@ function Dashboard({ theme, toggleTheme }) {
       <Sidebar />
 
       <div className="dashboard-content">
-        <Navbar user={currentUser} theme={theme} toggleTheme={toggleTheme} />
+        <Navbar
+          user={currentUser}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          showWelcomeBanner={true}
+        />
 
         <div className="dashboard-header">
           <div>
@@ -246,9 +281,24 @@ function Dashboard({ theme, toggleTheme }) {
             </p>
           </div>
 
-          <div className="dashboard-live-badge">
-            <span className="live-dot"></span>
-            LIVE MONITORING
+          <div className="dashboard-header-actions">
+            <div className="dashboard-last-updated">
+              Last Updated: {getRelativeLastUpdated(lastUpdated)}
+            </div>
+
+            <button
+              className="dashboard-refresh-btn"
+              onClick={() => fetchDashboardData(true)}
+              disabled={refreshing}
+            >
+              <FaSyncAlt className={refreshing ? "spin-refresh" : ""} />
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </button>
+
+            <div className="dashboard-live-badge">
+              <span className="live-dot"></span>
+              LIVE MONITORING
+            </div>
           </div>
         </div>
 
@@ -274,11 +324,12 @@ function Dashboard({ theme, toggleTheme }) {
             <StatCard
               key={index}
               title={item.title}
-              value={loading ? "..." : item.value}
+              value={loading ? 0 : item.value}
               icon={item.icon}
               trend={item.trend}
               trendType={item.trendType}
               accent={item.accent}
+              riskLevel={item.riskLevel}
             />
           ))}
         </div>

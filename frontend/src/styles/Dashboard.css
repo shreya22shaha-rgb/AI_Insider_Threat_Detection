@@ -18,6 +18,13 @@
   gap: 16px;
 }
 
+.dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .dashboard-title {
   font-size: 24px;
   font-weight: 700;
@@ -31,6 +38,42 @@
   font-size: 13px;
   color: var(--text-faint);
   margin: 5px 0 0;
+}
+
+.dashboard-last-updated {
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.dashboard-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.dashboard-refresh-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.14);
+}
+
+.dashboard-refresh-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .dashboard-live-badge {
@@ -205,6 +248,16 @@
   min-width: 0;
 }
 
+.spin-refresh {
+  animation: spinRefresh 0.9s linear infinite;
+}
+
+@keyframes spinRefresh {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 1400px) {
   .cards-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -231,6 +284,15 @@
   .dashboard-title {
     font-size: 20px;
   }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-header-actions {
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -255,5 +317,25 @@
   .risk-table td {
     font-size: 13px;
     padding: 12px 10px;
+  }
+}
+
+.ai-employee-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.ai-employee-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 34px rgba(2, 6, 23, 0.18);
+}
+
+@keyframes aiCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

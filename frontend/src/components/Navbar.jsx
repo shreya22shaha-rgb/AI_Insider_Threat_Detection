@@ -6,6 +6,11 @@ import {
   FaSignOutAlt,
   FaMoon,
   FaSun,
+  FaChevronDown,
+  FaUser,
+  FaCog,
+  FaCalendarAlt,
+  FaClock,
 } from "react-icons/fa";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -49,14 +54,44 @@ function saveSeenAlertIds(idsSet) {
   }
 }
 
-function Navbar({ user, theme, toggleTheme }) {
+function getGreetingByHour(hour) {
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+}
+
+function Navbar({ user, theme, toggleTheme, showWelcomeBanner = false }) {
   const navigate = useNavigate();
   const notificationRef = useRef(null);
+  const profileRef = useRef(null);
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [alertsLoading, setAlertsLoading] = useState(true);
   const [seenAlertIds, setSeenAlertIds] = useState(() => loadSeenAlertIds());
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [showGreeting, setShowGreeting] = useState(showWelcomeBanner);
+
+  useEffect(() => {
+    setShowGreeting(showWelcomeBanner);
+
+    if (!showWelcomeBanner) return;
+
+    const timer = setTimeout(() => {
+      setShowGreeting(false);
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [showWelcomeBanner]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -65,6 +100,13 @@ function Navbar({ user, theme, toggleTheme }) {
         !notificationRef.current.contains(event.target)
       ) {
         setIsNotificationOpen(false);
+      }
+
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target)
+      ) {
+        setIsProfileOpen(false);
       }
     };
 
@@ -115,7 +157,6 @@ function Navbar({ user, theme, toggleTheme }) {
         time: "Recently",
         type: getNotificationType(item.risk_level),
         read: seenAlertIds.has(id),
-        severity: item.risk_level || "Unknown",
       };
     });
   }, [alerts, seenAlertIds]);
@@ -123,6 +164,32 @@ function Navbar({ user, theme, toggleTheme }) {
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.read).length,
     [notifications]
+  );
+
+  const greeting = useMemo(
+    () => getGreetingByHour(currentTime.getHours()),
+    [currentTime]
+  );
+
+  const formattedDate = useMemo(
+    () =>
+      currentTime.toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    [currentTime]
+  );
+
+  const formattedTime = useMemo(
+    () =>
+      currentTime.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
+    [currentTime]
   );
 
   const markAllAsSeen = () => {
@@ -148,6 +215,17 @@ function Navbar({ user, theme, toggleTheme }) {
       const next = !prev;
       if (next) {
         markAllAsSeen();
+        setIsProfileOpen(false);
+      }
+      return next;
+    });
+  };
+
+  const toggleProfileDropdown = () => {
+    setIsProfileOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setIsNotificationOpen(false);
       }
       return next;
     });
@@ -155,9 +233,29 @@ function Navbar({ user, theme, toggleTheme }) {
 
   return (
     <div className="navbar">
-      <div className="search-box">
-        <FaSearch />
-        <input type="text" placeholder="Search Employees..." />
+      <div className="navbar-left">
+        {showGreeting && (
+          <div className="navbar-greeting-block">
+            <h2 className="navbar-greeting">
+              {greeting}, {user?.username || user?.name || "Admin"} 👋
+            </h2>
+            <div className="navbar-datetime">
+              <span className="navbar-date">
+                <FaCalendarAlt />
+                {formattedDate}
+              </span>
+              <span className="navbar-time">
+                <FaClock />
+                {formattedTime}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className="search-box">
+          <FaSearch />
+          <input type="text" placeholder="Search Employees..." />
+        </div>
       </div>
 
       <div className="navbar-right">
@@ -192,9 +290,7 @@ function Navbar({ user, theme, toggleTheme }) {
               <div className="notification-header">
                 <h3>Notifications</h3>
                 <span className="notification-count">
-                  {alertsLoading
-                    ? "Loading..."
-                    : `${notifications.length} total`}
+                  {alertsLoading ? "Loading..." : `${notifications.length} total`}
                 </span>
               </div>
 
@@ -210,7 +306,6 @@ function Navbar({ user, theme, toggleTheme }) {
                       className={`notification-item ${item.read ? "read" : "unread"}`}
                     >
                       <div className={`notification-dot ${item.type}`}></div>
-
                       <div className="notification-content">
                         <div className="notification-title-row">
                           <p className="notification-title">{item.title}</p>
@@ -226,19 +321,58 @@ function Navbar({ user, theme, toggleTheme }) {
           )}
         </div>
 
-        <div className="nav-user-chip">
-          <FaUserCircle className="profile-icon" />
+        <div className="profile-wrapper" ref={profileRef}>
+          <button
+            className={`nav-user-chip profile-trigger ${isProfileOpen ? "active" : ""}`}
+            type="button"
+            onClick={toggleProfileDropdown}
+            aria-label="Open profile menu"
+            aria-expanded={isProfileOpen}
+            aria-haspopup="true"
+          >
+            <FaUserCircle className="profile-icon" />
+            <div className="nav-user-info">
+              <div className="nav-user-name">{user?.username || user?.name || "Admin"}</div>
+              <div className="nav-user-role">{user?.role || "Administrator"}</div>
+            </div>
+            <FaChevronDown className={`profile-caret ${isProfileOpen ? "rotate" : ""}`} />
+          </button>
 
-          <div className="nav-user-info">
-            <div className="nav-user-name">{user?.username || user?.name || "Admin User"}</div>
-            <div className="nav-user-role">{user?.role || "Security Admin"}</div>
-          </div>
+          {isProfileOpen && (
+            <div className="profile-dropdown">
+              <div className="profile-dropdown-header">
+                <FaUserCircle className="profile-dropdown-avatar" />
+                <div>
+                  <div className="profile-dropdown-name">
+                    {user?.username || user?.name || "Admin"}
+                  </div>
+                  <div className="profile-dropdown-role">
+                    {user?.role || "Administrator"}
+                  </div>
+                </div>
+              </div>
+
+              <button className="profile-dropdown-item" type="button">
+                <FaUser />
+                My Profile
+              </button>
+
+              <button className="profile-dropdown-item" type="button">
+                <FaCog />
+                Settings
+              </button>
+
+              <button
+                className="profile-dropdown-item logout-item"
+                type="button"
+                onClick={handleLogout}
+              >
+                <FaSignOutAlt />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
-
-        <button className="logout-btn" onClick={handleLogout} type="button">
-          <FaSignOutAlt />
-          Logout
-        </button>
       </div>
     </div>
   );
