@@ -18,3 +18,22 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+    # -----------------------------
+# Forgot Password
+# -----------------------------
+
+class ForgotPasswordRequest(BaseModel):
+
+    username_or_email: str
+
+
+# -----------------------------
+# Reset Password
+# -----------------------------
+
+class ResetPasswordRequest(BaseModel):
+
+    token: str
+
+    new_password: str

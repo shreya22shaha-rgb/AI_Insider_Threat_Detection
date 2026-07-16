@@ -1,15 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import date
+from datetime import date, datetime, timedelta
 from .user_models import User
-from .user_schemas import UserCreate, UserResponse, UserLogin
+from .user_schemas import (
+    UserCreate,
+    UserResponse,
+    UserLogin,
+    ForgotPasswordRequest,
+    ResetPasswordRequest
+)
 from fastapi.security import OAuth2PasswordRequestForm
 
 from .database import SessionLocal
 from .models import EmployeeActivity
 from .audit_models import AuditLog
 from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
+import secrets
 
 from .auth import (
     hash_password,
@@ -700,6 +707,85 @@ def login_user(
         "token_type": "bearer"
     }
 
+
+@router.post("/forgot-password")
+def forgot_password(
+    request: ForgotPasswordRequest,
+    db: Session = Depends(get_db)
+):
+
+    user = (
+        db.query(User)
+        .filter(
+            (User.username == request.username_or_email) |
+            (User.email == request.username_or_email)
+        )
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    reset_token = secrets.token_urlsafe(32)
+
+    expiry = datetime.utcnow() + timedelta(minutes=15)
+
+    user.reset_token = reset_token
+    user.reset_token_expiry = expiry
+
+    db.commit()
+
+    return {
+        "message": "Password reset token generated successfully.",
+        "reset_token": reset_token,
+        "expires_at": expiry
+    }
+
+
+@router.post("/reset-password")
+def reset_password(
+    request: ResetPasswordRequest,
+    db: Session = Depends(get_db)
+):
+
+    user = (
+        db.query(User)
+        .filter(User.reset_token == request.token)
+        .first()
+    )
+
+    if not user:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid reset token"
+        )
+
+    if (
+        user.reset_token_expiry is None
+        or user.reset_token_expiry < datetime.utcnow()
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail="Reset token has expired"
+        )
+
+    user.password = hash_password(
+        request.new_password
+    )
+
+    user.reset_token = None
+    user.reset_token_expiry = None
+
+    db.commit()
+
+    return {
+        "message": "Password reset successfully."
+    }
 
 @router.get("/test-token")
 def test_token(
