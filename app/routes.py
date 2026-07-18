@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date, datetime, timedelta
 from .user_models import User
+from app.logger import logger
 from .user_schemas import (
     UserCreate,
     UserResponse,
@@ -73,26 +74,59 @@ def get_db():
 
 # Home Route
 @router.get("/")
-
 def home():
-    return {"message": "AI Insider Threat Detection API Running"}
+    logger.info("Backend started successfully.")
+    return {
+        "message": "AI Insider Threat Detection API Running"
+    }
 
 # Add Employee Activity
 @router.post("/add-activity", response_model=EmployeeActivityResponse)
-
-def add_activity(activity: EmployeeActivityCreate, db: Session = Depends(get_db)):
+def add_activity(
+    activity: EmployeeActivityCreate,
+    db: Session = Depends(get_db)
+):
 
     risk_level = calculate_risk(activity.activity_type)
 
     new_activity = EmployeeActivity(
-     employee_name=activity.employee_name,
-     activity_type=activity.activity_type,
-     risk_level=risk_level
+        employee_name=activity.employee_name,
+        activity_type=activity.activity_type,
+        risk_level=risk_level
     )
 
     db.add(new_activity)
     db.commit()
     db.refresh(new_activity)
+
+    # Log activity
+    logger.info(
+        f"Activity '{activity.activity_type}' added for employee '{activity.employee_name}'."
+    )
+
+    audit_log = AuditLog(
+        username=activity.employee_name,
+        action="ACTIVITY_CREATED"
+    )
+
+    db.add(audit_log)
+
+    # Log High Risk Activities
+    if risk_level == "High":
+
+        logger.warning(
+            f"High-risk activity detected for employee '{activity.employee_name}' "
+            f"({activity.activity_type})."
+        )
+
+        high_risk_audit = AuditLog(
+            username=activity.employee_name,
+            action="HIGH_RISK_ACTIVITY"
+        )
+
+        db.add(high_risk_audit)
+
+    db.commit()
 
     return new_activity
 
@@ -654,7 +688,12 @@ def login_user(
         .first()
     )
 
+    # User not found
     if not db_user:
+
+        logger.warning(
+            f"Login failed - user '{form_data.username}' does not exist."
+        )
 
         audit_log = AuditLog(
             username=form_data.username,
@@ -669,10 +708,15 @@ def login_user(
             detail="User not found"
         )
 
+    # Wrong password
     if not verify_password(
         form_data.password,
         db_user.password
     ):
+
+        logger.warning(
+            f"Login failed - invalid password for user '{db_user.username}'."
+        )
 
         audit_log = AuditLog(
             username=db_user.username,
@@ -687,11 +731,17 @@ def login_user(
             detail="Invalid password"
         )
 
+    # Generate JWT token
     access_token = create_access_token(
         {
             "sub": db_user.username,
             "role": db_user.role
         }
+    )
+
+    # Log successful login
+    logger.info(
+        f"User '{db_user.username}' logged in successfully."
     )
 
     audit_log = AuditLog(
@@ -723,12 +773,27 @@ def forgot_password(
         .first()
     )
 
+    # User not found
     if not user:
+
+        logger.warning(
+            f"Password reset requested for unknown user '{request.username_or_email}'."
+        )
+
+        audit_log = AuditLog(
+            username=request.username_or_email,
+            action="FORGOT_PASSWORD_FAILED"
+        )
+
+        db.add(audit_log)
+        db.commit()
+
         raise HTTPException(
             status_code=404,
             detail="User not found"
         )
 
+    # Generate reset token
     reset_token = secrets.token_urlsafe(32)
 
     expiry = datetime.utcnow() + timedelta(minutes=15)
@@ -738,12 +803,24 @@ def forgot_password(
 
     db.commit()
 
+    # Log successful password reset request
+    logger.info(
+        f"Password reset token generated for user '{user.username}'."
+    )
+
+    audit_log = AuditLog(
+        username=user.username,
+        action="FORGOT_PASSWORD_REQUEST"
+    )
+
+    db.add(audit_log)
+    db.commit()
+
     return {
         "message": "Password reset token generated successfully.",
         "reset_token": reset_token,
         "expires_at": expiry
     }
-
 
 @router.post("/reset-password")
 def reset_password(
@@ -757,23 +834,50 @@ def reset_password(
         .first()
     )
 
+    # Invalid token
     if not user:
+
+        logger.warning(
+            f"Password reset failed - invalid reset token used."
+        )
+
+        audit_log = AuditLog(
+            username="UNKNOWN",
+            action="PASSWORD_RESET_FAILED"
+        )
+
+        db.add(audit_log)
+        db.commit()
 
         raise HTTPException(
             status_code=400,
             detail="Invalid reset token"
         )
 
+    # Expired token
     if (
         user.reset_token_expiry is None
         or user.reset_token_expiry < datetime.utcnow()
     ):
+
+        logger.warning(
+            f"Password reset failed - expired token for user '{user.username}'."
+        )
+
+        audit_log = AuditLog(
+            username=user.username,
+            action="PASSWORD_RESET_EXPIRED"
+        )
+
+        db.add(audit_log)
+        db.commit()
 
         raise HTTPException(
             status_code=400,
             detail="Reset token has expired"
         )
 
+    # Update password
     user.password = hash_password(
         request.new_password
     )
@@ -781,6 +885,19 @@ def reset_password(
     user.reset_token = None
     user.reset_token_expiry = None
 
+    db.commit()
+
+    # Log successful password reset
+    logger.info(
+        f"Password successfully reset for user '{user.username}'."
+    )
+
+    audit_log = AuditLog(
+        username=user.username,
+        action="PASSWORD_RESET_SUCCESS"
+    )
+
+    db.add(audit_log)
     db.commit()
 
     return {
