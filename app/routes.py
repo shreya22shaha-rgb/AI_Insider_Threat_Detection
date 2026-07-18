@@ -132,21 +132,117 @@ def add_activity(
 
 # Get All Activities
 @router.get("/activities")
-
 def get_activities(
-    current_user = Depends(get_current_user),
+    page: int = 1,
+    limit: int = 10,
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
-   ):
-    
+):
+
     require_role(
-    current_user,
-    ["Admin", "Analyst"]
+        current_user,
+        ["Admin", "Analyst"]
     )
 
-    activities = db.query(EmployeeActivity).all()
+    if page < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Page number must be greater than 0."
+        )
 
-    return activities
+    if limit < 1 or limit > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Limit must be between 1 and 100."
+        )
 
+    total_records = db.query(EmployeeActivity).count()
+
+    total_pages = (
+        total_records + limit - 1
+    ) // limit
+
+    activities = (
+        db.query(EmployeeActivity)
+        .order_by(EmployeeActivity.timestamp.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "page": page,
+        "limit": limit,
+        "total_records": total_records,
+        "total_pages": total_pages,
+        "data": activities
+    }
+
+@router.get("/activities/search")
+def search_activities(
+    employee_name: str = None,
+    activity_type: str = None,
+    risk_level: str = None,
+    page: int = 1,
+    limit: int = 10,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    require_role(
+        current_user,
+        ["Admin", "Analyst"]
+    )
+
+    if page < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Page number must be greater than 0."
+        )
+
+    if limit < 1 or limit > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Limit must be between 1 and 100."
+        )
+
+    query = db.query(EmployeeActivity)
+
+    if employee_name:
+        query = query.filter(
+            EmployeeActivity.employee_name.ilike(f"%{employee_name}%")
+        )
+
+    if activity_type:
+        query = query.filter(
+            EmployeeActivity.activity_type.ilike(f"%{activity_type}%")
+        )
+
+    if risk_level:
+        query = query.filter(
+            EmployeeActivity.risk_level.ilike(f"%{risk_level}%")
+        )
+
+    total_records = query.count()
+
+    total_pages = (
+        total_records + limit - 1
+    ) // limit
+
+    activities = (
+        query.order_by(EmployeeActivity.timestamp.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "page": page,
+        "limit": limit,
+        "total_records": total_records,
+        "total_pages": total_pages,
+        "data": activities
+    }
 
 @router.get("/alerts")
 
@@ -169,24 +265,30 @@ def get_alerts(db: Session = Depends(get_db)):
 
     return alerts
 
-@router.get("/dashboard")
+from sqlalchemy import func
 
+
+@router.get("/dashboard")
 def dashboard_stats(db: Session = Depends(get_db)):
 
-    activities = db.query(EmployeeActivity).all()
+    total_activities = db.query(EmployeeActivity).count()
 
-    total_activities = len(activities)
-
-    high_risk = len(
-        [a for a in activities if a.risk_level == "High"]
+    high_risk = (
+        db.query(EmployeeActivity)
+        .filter(EmployeeActivity.risk_level == "High")
+        .count()
     )
 
-    medium_risk = len(
-        [a for a in activities if a.risk_level == "Medium"]
+    medium_risk = (
+        db.query(EmployeeActivity)
+        .filter(EmployeeActivity.risk_level == "Medium")
+        .count()
     )
 
-    low_risk = len(
-        [a for a in activities if a.risk_level == "Low"]
+    low_risk = (
+        db.query(EmployeeActivity)
+        .filter(EmployeeActivity.risk_level == "Low")
+        .count()
     )
 
     return {

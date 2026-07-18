@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr, field_validator
+import re
 
 
 # ---------------------------------
@@ -43,6 +44,26 @@ class UserCreate(BaseModel):
                 "Password must be at least 8 characters long."
             )
 
+        if not re.search(r"[A-Z]", value):
+            raise ValueError(
+                "Password must contain at least one uppercase letter."
+            )
+
+        if not re.search(r"[a-z]", value):
+            raise ValueError(
+                "Password must contain at least one lowercase letter."
+            )
+
+        if not re.search(r"\d", value):
+            raise ValueError(
+                "Password must contain at least one number."
+            )
+
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", value):
+            raise ValueError(
+                "Password must contain at least one special character."
+            )
+
         return value
 
 
@@ -80,6 +101,39 @@ class UserLogin(BaseModel):
 
         return value
 
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value):
+
+        value = value.strip()
+
+        if len(value) < 8:
+            raise ValueError(
+                "Password must be at least 8 characters long."
+            )
+
+        if not re.search(r"[A-Z]", value):
+            raise ValueError(
+                "Password must contain at least one uppercase letter."
+            )
+
+        if not re.search(r"[a-z]", value):
+            raise ValueError(
+                "Password must contain at least one lowercase letter."
+            )
+
+        if not re.search(r"\d", value):
+            raise ValueError(
+                "Password must contain at least one number."
+            )
+
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", value):
+            raise ValueError(
+                "Password must contain at least one special character."
+            )
+
+        return value
+
 
 # ---------------------------------
 # Forgot Password
@@ -92,10 +146,13 @@ class ForgotPasswordRequest(BaseModel):
     @field_validator("username_or_email")
     @classmethod
     def validate_username_or_email(cls, value):
+
         value = value.strip()
 
         if not value:
-            raise ValueError("Username or Email cannot be empty.")
+            raise ValueError(
+                "Username or Email cannot be empty."
+            )
 
         return value
 
@@ -118,6 +175,26 @@ class ResetPasswordRequest(BaseModel):
         if len(value) < 8:
             raise ValueError(
                 "Password must be at least 8 characters long."
+            )
+
+        if not re.search(r"[A-Z]", value):
+            raise ValueError(
+                "Password must contain at least one uppercase letter."
+            )
+
+        if not re.search(r"[a-z]", value):
+            raise ValueError(
+                "Password must contain at least one lowercase letter."
+            )
+
+        if not re.search(r"\d", value):
+            raise ValueError(
+                "Password must contain at least one number."
+            )
+
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", value):
+            raise ValueError(
+                "Password must contain at least one special character."
             )
 
         return value
