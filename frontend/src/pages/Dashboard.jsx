@@ -12,6 +12,7 @@ import Navbar from "../components/Navbar";
 import StatCard from "../components/StatCard";
 import api from "../services/api";
 import "../styles/Dashboard.css";
+import ChatbotWidget from "../components/chatbot/ChatbotWidget";
 
 function riskColor(level) {
   const l = (level || "").toLowerCase();
@@ -334,6 +335,7 @@ function Dashboard({ theme, toggleTheme }) {
           ))}
         </div>
       </div>
+      <ChatbotWidget />
     </>
   );
 }
