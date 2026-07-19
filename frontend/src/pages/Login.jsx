@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaShieldAlt, FaEye, FaEyeSlash, FaExclamationCircle } from "react-icons/fa";
+import { FaShieldAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 import "../styles/Login.css";
 
@@ -16,7 +16,6 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showForgotModal, setShowForgotModal] = useState(false);
 
   useEffect(() => {
     const savedUsername = localStorage.getItem("rememberedUsername");
@@ -42,14 +41,6 @@ function LoginPage() {
     }
   };
 
-  const handleForgotPassword = () => {
-    setShowForgotModal(true);
-  };
-
-  const closeForgotModal = () => {
-    setShowForgotModal(false);
-  };
-
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -70,15 +61,11 @@ function LoginPage() {
       params.append("client_id", "");
       params.append("client_secret", "");
 
-      const response = await axios.post(
-        "http://127.0.0.1:8000/login",
-        params,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
+      const response = await axios.post("http://127.0.0.1:8000/login", params, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
 
       const { access_token, token_type } = response.data;
 
@@ -119,122 +106,94 @@ function LoginPage() {
   };
 
   return (
-    <>
-      <div className="login-container">
-        <div className="login-bg-shape shape-1"></div>
-        <div className="login-bg-shape shape-2"></div>
-        <div className="login-bg-shape shape-3"></div>
+    <div className="login-container">
+      <div className="login-bg-shape shape-1"></div>
+      <div className="login-bg-shape shape-2"></div>
+      <div className="login-bg-shape shape-3"></div>
 
-        <div className="login-card">
-          <div className="logo">
-            <FaShieldAlt color="#3b82f6" />
+      <div className="login-card">
+        <div className="logo">
+          <FaShieldAlt color="#3b82f6" />
+        </div>
+
+        <h1>AI Threat Detection</h1>
+        <p>Secure Login Portal</p>
+
+        <form onSubmit={handleLogin}>
+          <div className="input-group">
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              placeholder="Enter username or email"
+              value={formData.username}
+              onChange={handleChange}
+            />
           </div>
 
-          <h1>AI Threat Detection</h1>
-          <p>Secure Login Portal</p>
-
-          <form onSubmit={handleLogin}>
-            <div className="input-group">
-              <label htmlFor="username">Username</label>
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <div className="password-wrapper">
               <input
-                id="username"
-                name="username"
-                type="text"
-                placeholder="Enter username"
-                value={formData.username}
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter password"
+                value={formData.password}
                 onChange={handleChange}
               />
-            </div>
-
-            <div className="input-group">
-              <label htmlFor="password">Password</label>
-              <div className="password-wrapper">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter password"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-                <button
-                  type="button"
-                  className="eye-btn"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-              </div>
-            </div>
-
-            <div className="remember-row">
-              <label>
-                <input
-                  type="checkbox"
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleChange}
-                />
-                Remember me
-              </label>
-
               <button
                 type="button"
-                className="forgot-password-btn"
-                onClick={handleForgotPassword}
+                className="eye-btn"
+                onClick={() => setShowPassword((prev) => !prev)}
               >
-                Forgot Password?
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+          </div>
 
-            {error && <div className="login-error">{error}</div>}
-
-            <button type="submit" className="login-btn" disabled={loading}>
-              {loading ? (
-                <span className="login-btn-content">
-                  <span className="login-spinner"></span>
-                  Signing In...
-                </span>
-              ) : (
-                "Sign In"
-              )}
-            </button>
-
-            <div className="security-badge">Protected by AI Security Shield</div>
-
-            <div className="login-footer">
-              Authorized access only • <span>Cyber Defense System</span>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      {showForgotModal && (
-        <div className="modal-overlay" onClick={closeForgotModal}>
-          <div
-            className="forgot-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="forgot-modal-icon">
-              <FaExclamationCircle />
-            </div>
-
-            <h2>Password Reset Unavailable</h2>
-            <p>
-              Password reset is not enabled yet. Please contact the administrator.
-            </p>
+          <div className="remember-row">
+            <label>
+              <input
+                type="checkbox"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleChange}
+              />
+              Remember me
+            </label>
 
             <button
               type="button"
-              className="forgot-modal-btn"
-              onClick={closeForgotModal}
+              className="forgot-password-btn"
+              onClick={() => navigate("/forgot-password")}
             >
-              OK
+              Forgot Password?
             </button>
           </div>
-        </div>
-      )}
-    </>
+
+          {error && <div className="login-error">{error}</div>}
+
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? (
+              <span className="login-btn-content">
+                <span className="login-spinner"></span>
+                Signing In...
+              </span>
+            ) : (
+              "Sign In"
+            )}
+          </button>
+
+          <div className="security-badge">Protected by AI Security Shield</div>
+
+          <div className="login-footer">
+            Authorized access only • <span>Cyber Defense System</span>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 

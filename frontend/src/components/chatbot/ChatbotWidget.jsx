@@ -12,7 +12,7 @@ function ChatbotWidget() {
     {
       id: "welcome",
       role: "bot",
-      text: "👋 Welcome, Admin!\n\nHow can I help you today?",
+      text: "👋 Welcome, Admin!\n",
       timestamp: new Date(),
     },
   ]);

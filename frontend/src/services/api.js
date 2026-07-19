@@ -36,4 +36,10 @@ api.interceptors.response.use(
   }
 );
 
+export const forgotPasswordRequest = (username_or_email) =>
+  api.post("/forgot-password", { username_or_email });
+
+export const resetPasswordRequest = (token, new_password) =>
+  api.post("/reset-password", { token, new_password });
+
 export default api;

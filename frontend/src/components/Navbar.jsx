@@ -60,7 +60,16 @@ function getGreetingByHour(hour) {
   return "Good Evening";
 }
 
-function Navbar({ user, theme, toggleTheme, showWelcomeBanner = false }) {
+function Navbar({
+  user,
+  theme,
+  toggleTheme,
+  showWelcomeBanner = false,
+  showSearch = false,
+  searchPlaceholder = "Search...",
+  searchValue = "",
+  onSearchChange,
+}) {
   const navigate = useNavigate();
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
@@ -74,16 +83,16 @@ function Navbar({ user, theme, toggleTheme, showWelcomeBanner = false }) {
   const [showGreeting, setShowGreeting] = useState(showWelcomeBanner);
 
   useEffect(() => {
-    setShowGreeting(showWelcomeBanner);
+  setShowGreeting(showWelcomeBanner);
 
-    if (!showWelcomeBanner) return;
+  if (!showWelcomeBanner) return;
 
-    const timer = setTimeout(() => {
-      setShowGreeting(false);
-    }, 2500);
+  const timer = setTimeout(() => {
+    setShowGreeting(false);
+  }, 10000);
 
-    return () => clearTimeout(timer);
-  }, [showWelcomeBanner]);
+  return () => clearTimeout(timer);
+}, [showWelcomeBanner]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -252,10 +261,17 @@ function Navbar({ user, theme, toggleTheme, showWelcomeBanner = false }) {
           </div>
         )}
 
-        <div className="search-box">
-          <FaSearch />
-          <input type="text" placeholder="Search Employees..." />
-        </div>
+        {showSearch && (
+          <div className="search-box">
+            <FaSearch />
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+            />
+          </div>
+        )}
       </div>
 
       <div className="navbar-right">

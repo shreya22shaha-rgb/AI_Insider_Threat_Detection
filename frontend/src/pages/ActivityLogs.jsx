@@ -36,6 +36,23 @@ function getStatusStyle(status) {
   );
 }
 
+function normalizeActivities(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.activities)) return payload.activities;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.logs)) return payload.logs;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.rows)) return payload.rows;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+}
+
+function formatTimestamp(timestamp) {
+  if (!timestamp) return "Just now";
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? String(timestamp) : date.toLocaleString();
+}
+
 function SkeletonRow() {
   return (
     <tr>
@@ -69,41 +86,81 @@ function ActivityLogs({ theme, toggleTheme }) {
 
   useEffect(() => {
     const stored = localStorage.getItem("loggedInUser");
-    if (stored) setCurrentUser(JSON.parse(stored));
+    if (stored) {
+      try {
+        setCurrentUser(JSON.parse(stored));
+      } catch {
+        setCurrentUser(null);
+      }
+    }
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    setError("");
+    const fetchActivities = async () => {
+      setLoading(true);
+      setError("");
 
-    api
-      .get("/activities")
-      .then((res) => {
-        const data = Array.isArray(res.data) ? res.data : res.data?.activities || [];
-        setActivities(data);
-      })
-      .catch((err) => {
+      try {
+        const endpoints = ["/activities", "/activity-logs", "/logs"];
+        let foundData = [];
+
+        for (const endpoint of endpoints) {
+          try {
+            const res = await api.get(endpoint);
+            console.log(`Activity logs response from ${endpoint}:`, res.data);
+
+            const normalized = normalizeActivities(res.data);
+
+            if (normalized.length > 0) {
+              foundData = normalized;
+              break;
+            }
+
+            if (
+              normalized.length === 0 &&
+              endpoint === endpoints[endpoints.length - 1]
+            ) {
+              foundData = [];
+            }
+          } catch (innerError) {
+            console.warn(`Failed endpoint ${endpoint}:`, innerError);
+          }
+        }
+
+        setActivities(foundData);
+      } catch (err) {
         console.error("Activity logs error:", err);
         setError("Failed to load activity logs.");
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActivities();
   }, []);
 
   const filtered = useMemo(() => {
     return activities.filter((log) => {
-      const riskOrStatus = log.risk_level || log.status || "";
+      const riskOrStatus = (log.risk_level || log.status || "").toLowerCase();
+      const query = search.toLowerCase();
 
       const matchFilter =
-        filter === "All" || riskOrStatus.toLowerCase() === filter.toLowerCase();
-
-      const query = search.toLowerCase();
+        filter === "All" || riskOrStatus === filter.toLowerCase();
 
       const matchSearch =
         !search ||
-        log.employee_name?.toLowerCase().includes(query) ||
-        log.activity_type?.toLowerCase().includes(query) ||
-        log.department?.toLowerCase().includes(query) ||
-        String(log.log_id || log.activity_id || "").toLowerCase().includes(query);
+        String(log.employee_name || log.user || "")
+          .toLowerCase()
+          .includes(query) ||
+        String(log.activity_type || log.event || "")
+          .toLowerCase()
+          .includes(query) ||
+        String(log.department || "")
+          .toLowerCase()
+          .includes(query) ||
+        String(log.log_id || log.activity_id || "")
+          .toLowerCase()
+          .includes(query);
 
       return matchFilter && matchSearch;
     });
@@ -123,7 +180,7 @@ function ActivityLogs({ theme, toggleTheme }) {
   const totalLogs = activities.length;
 
   const criticalCount = activities.filter((a) => {
-    const level = a.risk_level?.toLowerCase();
+    const level = a.risk_level?.toLowerCase() || a.status?.toLowerCase() || "";
     return level === "critical" || level === "high";
   }).length;
 
@@ -215,7 +272,7 @@ function ActivityLogs({ theme, toggleTheme }) {
                   marginTop: 4,
                 }}
               >
-                Security-relevant events and employee actions from GET /activities.
+                Security-relevant events and employee actions from API activity logs.
               </p>
             </div>
 
@@ -467,9 +524,7 @@ function ActivityLogs({ theme, toggleTheme }) {
                             }}
                           >
                             <FaClock size={10} color="var(--text-secondary)" />
-                            {log.timestamp
-                              ? new Date(log.timestamp).toLocaleString()
-                              : "Just now"}
+                            {formatTimestamp(log.timestamp || log.created_at || log.time)}
                           </div>
                         </td>
                       </tr>
