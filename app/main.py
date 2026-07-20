@@ -10,10 +10,20 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi import HTTPException
 import logging
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="AI Insider Threat Detection System")
+logger.info("AI Insider Threat Detection System started successfully.")
 logger = logging.getLogger(__name__)
 # Enable CORS
 app.add_middleware(
@@ -105,3 +115,11 @@ app.include_router(router)
 
 # AI Prediction Routes
 app.include_router(prediction_router)
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("AI Insider Threat Detection System started successfully.")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Application shutdown successfully.")

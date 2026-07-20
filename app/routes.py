@@ -106,7 +106,7 @@ def add_activity(
 
     audit_log = AuditLog(
         username=activity.employee_name,
-        action="ACTIVITY_CREATED"
+        action=f"Activity created: {activity.activity_type}"
     )
 
     db.add(audit_log)
@@ -121,7 +121,7 @@ def add_activity(
 
         high_risk_audit = AuditLog(
             username=activity.employee_name,
-            action="HIGH_RISK_ACTIVITY"
+            action=f"High-risk activity detected: {activity.activity_type}"
         )
 
         db.add(high_risk_audit)
@@ -763,10 +763,13 @@ def register_user(
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    logger.info(
+        f"Admin '{current_user['username']}' registered new user '{new_user.username}' with role '{new_user.role}'."
+    )
 
     audit_log = AuditLog(
       username=current_user["username"],
-      action="USER_REGISTERED"
+      action=f"Registered user '{new_user.username}' with role '{new_user.role}'"
    )
 
     db.add(audit_log)
@@ -908,7 +911,7 @@ def forgot_password(
 
     audit_log = AuditLog(
         username=user.username,
-        action="FORGOT_PASSWORD_REQUEST"
+        action="Password reset token generated"
     )
 
     db.add(audit_log)
@@ -987,7 +990,7 @@ def reset_password(
 
     # Log successful password reset
     logger.info(
-        f"Password successfully reset for user '{user.username}'."
+        f"User '{user.username}' successfully completed a password reset."
     )
 
     audit_log = AuditLog(
