@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, case
 from datetime import date, datetime, timedelta
 from .user_models import User
 from app.logger import logger
@@ -368,43 +368,39 @@ def recent_alerts(db: Session = Depends(get_db)):
 
 
 @router.get("/employee-risk-score")
-
 def employee_risk_score(db: Session = Depends(get_db)):
 
-    activities = db.query(EmployeeActivity).all()
-
-    employee_scores = {}
-
-    for activity in activities:
-
-        if activity.risk_level == "High":
-            score = 10
-
-        elif activity.risk_level == "Medium":
-            score = 5
-
-        else:
-            score = 1
-
-        if activity.employee_name not in employee_scores:
-            employee_scores[activity.employee_name] = 0
-
-        employee_scores[activity.employee_name] += score
-
-    result = []
-
-    for employee, score in employee_scores.items():
-        result.append({
-            "employee_name": employee,
-            "risk_score": score
-        })
-
-    result.sort(
-        key=lambda x: x["risk_score"],
-        reverse=True
+    risk_scores = (
+        db.query(
+            EmployeeActivity.employee_name,
+            func.sum(
+                case(
+                    (EmployeeActivity.risk_level == "High", 10),
+                    (EmployeeActivity.risk_level == "Medium", 5),
+                    else_=1
+                )
+            ).label("risk_score")
+        )
+        .group_by(EmployeeActivity.employee_name)
+        .order_by(
+            func.sum(
+                case(
+                    (EmployeeActivity.risk_level == "High", 10),
+                    (EmployeeActivity.risk_level == "Medium", 5),
+                    else_=1
+                )
+            ).desc()
+        )
+        .all()
     )
 
-    return result
+    return [
+        {
+            "employee_name": employee.employee_name,
+            "risk_score": employee.risk_score
+        }
+        for employee in risk_scores
+    ]
 
 @router.get("/dynamic-risk-score")
 def dynamic_risk_score(
