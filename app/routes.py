@@ -81,7 +81,24 @@ def home():
     }
 
 # Add Employee Activity
-@router.post("/add-activity", response_model=EmployeeActivityResponse)
+@router.post(
+    "/add-activity",
+    response_model=EmployeeActivityResponse,
+    tags=["Employee Activities"],
+    summary="Add Employee Activity",
+    description="""
+Create a new employee activity record.
+
+The system automatically determines the risk level (Low, Medium, or High)
+based on the activity type.
+
+High-risk activities are automatically logged and recorded in the audit log.
+""",
+    responses={
+        200: {"description": "Activity added successfully"},
+        422: {"description": "Validation error"},
+    },
+)
 def add_activity(
     activity: EmployeeActivityCreate,
     db: Session = Depends(get_db)
@@ -131,7 +148,24 @@ def add_activity(
     return new_activity
 
 # Get All Activities
-@router.get("/activities")
+@router.get(
+    "/activities",
+    tags=["Employee Activities"],
+    summary="View All Activities",
+    description="""
+Retrieve all recorded employee activities.
+
+Returns activity details including:
+
+- Employee Name
+- Activity Type
+- Risk Level
+- Timestamp
+""",
+    responses={
+        200: {"description": "Activities retrieved successfully"},
+    },
+)
 def get_activities(
     page: int = 1,
     limit: int = 10,
@@ -178,7 +212,25 @@ def get_activities(
         "data": activities
     }
 
-@router.get("/activities/search")
+@router.get(
+    "/activities/search",
+    tags=["Employee Activities"],
+    summary="Search Employee Activities",
+    description="""
+Search employee activities using optional filters.
+
+Supported filters:
+
+- Employee Name
+- Activity Type
+- Risk Level
+
+Supports pagination using page and limit parameters.
+""",
+    responses={
+        200: {"description": "Filtered activities retrieved successfully"},
+    },
+)
 def search_activities(
     employee_name: str = None,
     activity_type: str = None,
@@ -244,8 +296,18 @@ def search_activities(
         "data": activities
     }
 
-@router.get("/alerts")
 
+@router.get(
+    "/alerts",
+    tags=["Alerts"],
+    summary="Security Alerts",
+    description="""
+Retrieve all generated security alerts based on employee activities.
+""",
+    responses={
+        200: {"description": "Security alerts retrieved successfully"},
+    },
+)
 def get_alerts(db: Session = Depends(get_db)):
 
     activities = db.query(EmployeeActivity).all()
@@ -268,7 +330,23 @@ def get_alerts(db: Session = Depends(get_db)):
 from sqlalchemy import func
 
 
-@router.get("/dashboard")
+@router.get(
+    "/dashboard",
+    tags=["Dashboard"],
+    summary="Dashboard Statistics",
+    description="""
+Retrieve overall employee activity statistics.
+
+Returns:
+- Total Activities
+- High Risk Activities
+- Medium Risk Activities
+- Low Risk Activities
+""",
+    responses={
+        200: {"description": "Dashboard statistics retrieved successfully"},
+    },
+)
 def dashboard_stats(db: Session = Depends(get_db)):
 
     total_activities = db.query(EmployeeActivity).count()
@@ -298,8 +376,19 @@ def dashboard_stats(db: Session = Depends(get_db)):
         "low_risk": low_risk
     }
 
-@router.get("/high-risk-activities")
+@router.get(
+    "/high-risk-activities",
+    tags=["AI Analytics"],
+    summary="High-Risk Activities",
+    description="""
+Retrieve all activities classified as High Risk.
 
+These activities should be reviewed by security administrators.
+""",
+    responses={
+        200: {"description": "High-risk activities retrieved successfully"},
+    },
+)
 def get_high_risk_activities(db: Session = Depends(get_db)):
 
     high_risk_activities = (
@@ -310,8 +399,18 @@ def get_high_risk_activities(db: Session = Depends(get_db)):
 
     return high_risk_activities 
 
-@router.get("/employee/{employee_name}")
-
+@router.get(
+    "/employee/{employee_name}",
+    tags=["Employee Activities"],
+    summary="Employee Activity History",
+    description="""
+Retrieve all recorded activities for a specific employee.
+""",
+    responses={
+        200: {"description": "Employee activities retrieved successfully"},
+        404: {"description": "Employee not found"},
+    },
+)
 def get_employee_activities(
     employee_name: str,
     db: Session = Depends(get_db)
@@ -327,8 +426,19 @@ def get_employee_activities(
 
     return activities
 
-@router.get("/top-risky-employees")
+@router.get(
+    "/top-risky-employees",
+    tags=["AI Analytics"],
+    summary="Top Risky Employees",
+    description="""
+Retrieve employees ranked by the number of high-risk activities.
 
+Useful for identifying employees requiring further investigation.
+""",
+    responses={
+        200: {"description": "Top risky employees retrieved successfully"},
+    },
+)
 def top_risky_employees(db: Session = Depends(get_db)):
 
     risky_employees = (
@@ -354,7 +464,19 @@ def top_risky_employees(db: Session = Depends(get_db)):
 
     return result
 
-@router.get("/recent-alerts")
+@router.get(
+    "/recent-alerts",
+    tags=["Alerts"],
+    summary="Recent Security Alerts",
+    description="""
+Retrieve the most recent security alerts generated by the system.
+
+Useful for monitoring recent suspicious activities.
+""",
+    responses={
+        200: {"description": "Recent alerts retrieved successfully"},
+    },
+)
 def recent_alerts(db: Session = Depends(get_db)):
 
     alerts = (
@@ -367,7 +489,19 @@ def recent_alerts(db: Session = Depends(get_db)):
     return alerts
 
 
-@router.get("/employee-risk-score")
+@router.get(
+    "/employee-risk-score",
+    tags=["AI Analytics"],
+    summary="Employee Risk Scores",
+    description="""
+Calculate cumulative risk scores for all employees based on recorded activities.
+
+Higher scores indicate higher security risk.
+""",
+    responses={
+        200: {"description": "Employee risk scores retrieved successfully"},
+    },
+)
 def employee_risk_score(db: Session = Depends(get_db)):
 
     risk_scores = (
@@ -402,7 +536,19 @@ def employee_risk_score(db: Session = Depends(get_db)):
         for employee in risk_scores
     ]
 
-@router.get("/dynamic-risk-score")
+@router.get(
+    "/dynamic-risk-score",
+    tags=["AI Analytics"],
+    summary="Dynamic Risk Analysis",
+    description="""
+Generate dynamic risk analysis using AI algorithms.
+
+Provides real-time risk assessment for each employee.
+""",
+    responses={
+        200: {"description": "Dynamic risk scores generated successfully"},
+    },
+)
 def dynamic_risk_score(
     db: Session = Depends(get_db)
 ):
@@ -701,8 +847,19 @@ def insider_threat_rules(
 
     return alerts
 
-@router.get("/activities-by-date")
+@router.get(
+    "/activities-by-date",
+    tags=["Employee Activities"],
+    summary="Activities by Date",
+    description="""
+Retrieve employee activities filtered by a specified date range.
 
+Useful for daily or periodic activity analysis.
+""",
+    responses={
+        200: {"description": "Activities retrieved successfully"},
+    },
+)
 def activities_by_date(
     selected_date: date,
     db: Session = Depends(get_db)
@@ -720,7 +877,20 @@ def activities_by_date(
 
     return result
 
-@router.get("/employee-timeline/{employee_name}")
+@router.get(
+    "/employee-timeline/{employee_name}",
+    tags=["Employee Activities"],
+    summary="Employee Activity Timeline",
+    description="""
+Retrieve the complete chronological activity history for a specific employee.
+
+Useful for investigating employee behavior over time.
+""",
+    responses={
+        200: {"description": "Employee timeline retrieved successfully"},
+        404: {"description": "Employee not found"},
+    },
+)
 def employee_timeline(
     employee_name: str,
     db: Session = Depends(get_db)
@@ -737,7 +907,24 @@ def employee_timeline(
 
     return activities
 
-@router.post("/register", response_model=UserResponse)
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    tags=["Authentication"],
+    summary="Register New User",
+    description="""
+Create a new user account.
+
+Only users with the **Admin** role are authorized to register new users.
+
+The password is securely hashed before being stored.
+""",
+    responses={
+        200: {"description": "User registered successfully"},
+        403: {"description": "Access denied"},
+        422: {"description": "Validation error"},
+    },
+)
 def register_user(
     user: UserCreate,
     current_user = Depends(get_current_user),
@@ -777,7 +964,23 @@ def register_user(
 
     return new_user
 
-@router.post("/login")
+@router.post(
+    "/login",
+    tags=["Authentication"],
+    summary="User Login",
+    description="""
+Authenticate a registered user using username and password.
+
+Returns a JWT access token upon successful authentication.
+
+This endpoint is used by the frontend login page.
+""",
+    responses={
+        200: {"description": "Login successful"},
+        401: {"description": "Invalid username or password"},
+        422: {"description": "Validation error"},
+    },
+)
 def login_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
@@ -859,7 +1062,21 @@ def login_user(
     }
 
 
-@router.post("/forgot-password")
+@router.post(
+    "/forgot-password",
+    tags=["Authentication"],
+    summary="Forgot Password",
+    description="""
+Generate a temporary password reset token for a registered user.
+
+The token is valid for 15 minutes and is required to reset the password.
+""",
+    responses={
+        200: {"description": "Reset token generated successfully"},
+        404: {"description": "User not found"},
+        422: {"description": "Validation error"},
+    },
+)
 def forgot_password(
     request: ForgotPasswordRequest,
     db: Session = Depends(get_db)
@@ -923,7 +1140,21 @@ def forgot_password(
         "expires_at": expiry
     }
 
-@router.post("/reset-password")
+@router.post(
+    "/reset-password",
+    tags=["Authentication"],
+    summary="Reset Password",
+    description="""
+Reset a user's password using a valid password reset token.
+
+The reset token becomes invalid immediately after a successful password reset.
+""",
+    responses={
+        200: {"description": "Password reset successfully"},
+        400: {"description": "Invalid or expired reset token"},
+        422: {"description": "Validation error"},
+    },
+)
 def reset_password(
     request: ResetPasswordRequest,
     db: Session = Depends(get_db)
@@ -1124,7 +1355,25 @@ def executive_summary(
 
     }
 
-@router.get("/ai-dashboard")
+@router.get(
+    "/ai-dashboard",
+    tags=["AI Analytics"],
+    summary="AI Dashboard Analysis",
+    description="""
+Generate AI-powered security insights based on employee activities.
+
+Includes:
+- Risk Distribution
+- Activity Breakdown
+- Security Health
+- Threat Predictions
+- AI Recommendations
+- Executive Summary
+""",
+    responses={
+        200: {"description": "AI dashboard generated successfully"},
+    },
+)
 def ai_dashboard(
     db: Session = Depends(get_db)
 ):

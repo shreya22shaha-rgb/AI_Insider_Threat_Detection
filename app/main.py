@@ -22,8 +22,26 @@ logger = logging.getLogger(__name__)
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="AI Insider Threat Detection System")
+app = FastAPI(
+    title="AI Insider Threat Detection System API",
+    description="""
+AI-powered Insider Threat Detection and Cybersecurity Monitoring Platform.
+
+Features:
+- JWT Authentication
+- Employee Activity Monitoring
+- AI Risk Detection
+- Threat Prediction
+- Dashboard Analytics
+- Audit Logging
+- Employee Risk Score Analysis
+- Security Health Monitoring
+""",
+    version="1.0.0",
+)
+
 logger.info("AI Insider Threat Detection System started successfully.")
+
 logger = logging.getLogger(__name__)
 # Enable CORS
 app.add_middleware(
