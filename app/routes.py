@@ -1,32 +1,33 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import func, case
+# Standard Library
 from datetime import date, datetime, timedelta
-from .user_models import User
-from app.logger import logger
-from .user_schemas import (
-    UserCreate,
-    UserResponse,
-    UserLogin,
-    ForgotPasswordRequest,
-    ResetPasswordRequest
-)
-from fastapi.security import OAuth2PasswordRequestForm
+import secrets
 
+# Third-Party
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import case, func
+from sqlalchemy.orm import Session
+
+# Local Application
+from app.logger import logger
 from .database import SessionLocal
 from .models import EmployeeActivity
 from .audit_models import AuditLog
+from .user_models import User
 from .schemas import EmployeeActivityCreate, EmployeeActivityResponse
-import secrets
-
+from .user_schemas import (
+    UserCreate,
+    UserResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+)
 from .auth import (
     hash_password,
     verify_password,
     create_access_token,
     get_current_user,
-    require_role
+    require_role,
 )
-
 from .ai_engine import (
     calculate_risk_score,
     calculate_activity_breakdown,
@@ -36,9 +37,8 @@ from .ai_engine import (
     calculate_security_health,
     generate_executive_summary,
     group_activities_by_employee,
-    get_risk_level
+    get_risk_level,
 )
-
 router = APIRouter()
 
 def calculate_risk(activity_type):
